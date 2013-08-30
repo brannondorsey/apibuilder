@@ -1,0 +1,1 @@
+Easily transform MySQL tables into web accessible json with this mini library for PHP.
