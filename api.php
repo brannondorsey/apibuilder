@@ -4,18 +4,18 @@
 	 header("Content-Type: text/javascript; charset=utf-8");
 	 
 	 $api = new API();
-	 if(isset($_GET) && !empty($_GET)){
-	 	 Database::init_connection();
+	 // if(isset($_GET) && !empty($_GET)){
+	 // 	 Database::init_connection();
 	 	 
-		 $get_array = Database::clean($_GET); //clean the $_GET array
-		 $data = $api->get_JSON_from_GET($get_array); //return user JSON objs based on API get params
-		 Database::close_connection();
-	 	 echo $data;
-	 }else{
+		//  $get_array = Database::clean($_GET); //clean the $_GET array
+		//  $data = $api->get_JSON_from_GET($get_array); //return user JSON objs based on API get params
+		//  Database::close_connection();
+	 // 	 echo $data;
+	 // }else{
 	 	Database::init_connection();
 	 	$json_obj = new StdClass();
 
-	 	$query = "SELECT * FROM metadata LIMIT 5";
+	 	$query = "SELECT * FROM metadata ORDER BY id DESC LIMIT 5";
 	 	if($results_array = Database::get_all_results($query)){
 
 	 		// deletes key => value pairs if the value is empty. Only works if array is nested: 
@@ -27,6 +27,5 @@
 
 
 	 	echo json_encode($json_obj, JSON_PRETTY_PRINT);
-	 }
 	 
 ?>

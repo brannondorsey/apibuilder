@@ -39,7 +39,17 @@ class API {
 		 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
 		 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
 		 			$results_array = array_filter(array_map('array_filter', $results_array));
-		 			$json_obj->data = $results_array;
+
+		 			foreach($results_array as $result_array){
+		 				foreach($result_array as $key => $value){
+		 					if($key == "COUNT(*)"){
+		 						$count = $value;
+		 						break;
+		 					}
+		 				}
+		 			}
+		 			if(!isset($count)) $json_obj->data = $results_array;
+		 			else $json_obj->count = $count; 
 		 			//COME BACK need to make count only parameter work
 		 		}
 
@@ -50,7 +60,7 @@ class API {
 				$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE API_key = '" . $this->API_key . "' LIMIT 1";
 				$result = Database::get_all_results($query);
 				//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
-				if($this->update_API_hits($this->API_key, $result['API_hit_date']) === false){
+				if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
 				 $json_obj->error = "API hit limit reached";
 		   		}
 			 }

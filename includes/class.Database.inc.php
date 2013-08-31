@@ -73,11 +73,8 @@ class Database {
 					$result_to_return[$i] = $row;
 					$i++;	
 				}
-			if (count($result_to_return) > 1) {
+			if (count($result_to_return) >= 1) {
 				return $result_to_return;
-			} 
-			else if(count($result_to_return) == 1) {
-				return $result_to_return[0];
 			} 
 			else return false; //there were no results found
 		}
