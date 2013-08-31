@@ -18,16 +18,24 @@ class API {
 	protected $full_text_columns;
 	protected $API_key;
 	
-	public function __construct(){
+	public function __construct($host, $db, $table, $username, $password){
+		Database::init_connection($host, $db, $table, $username, $password);
 		$this->columns_to_provide = 
 			"id, timestamp, filename, title, domain, url, referrer, ip, forward_from, author, owner, description, keywords, copywrite";
 		$this->full_text_columns = "url, description, keywords";
 	}
 
 	//Returns a valid JSON string from $_GET values. Array must be sanitized before using this function.
-	public function get_JSON_from_GET(&$get_array, $object_parent_name="data"){
+
+	public function get_JSON_from_GET(&$get_array){
 
 		$json_obj = new StdClass();
+		$pretty_print = false;
+
+		if(isset($get_array['pretty_print']) && 
+		   strtolower($get_array['pretty_print']) == "true"){
+			$pretty_print = true;
+		}
 
 		$query = $this->form_query($get_array);
 		if($this->check_API_key()){
@@ -73,9 +81,9 @@ class API {
 				$this->search_in_boolean_mode = true; //set search in boolean mode to true
 				$this->search_has_been_repeated = true; //note that the search will now have been repeated
 			 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
-			 	return $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
+			 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
 			}
-		return json_encode($json_obj, JSON_PRETTY_PRINT);
+		return ($pretty_print) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
 	}
 
 

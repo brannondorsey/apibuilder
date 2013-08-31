@@ -3,24 +3,32 @@
 class Database {
 
 	public static $root_dir_link = "http://localhost:8888/api_builder";
-	public static $key = 12345;
+	public static $key;
 
 	//MySQL database info
-	protected static $user     = "root";
-	protected static $password = "root";
-	protected static $db       = "quartzite";
-  
-	public static $table    = "metadata";	
-	protected static $host  = "localhost";
+	protected static $host;
+	protected static $db;
+	public static $table;
+	protected static $user;
+	protected static $password;
+
 	protected static $mysqli;
 
 	//initialize the database connection
-	public static function init_connection(){
+	public static function init_connection($host, $db, $table, $username, $password){
+		self::$host = $host;
+		self::$db = $db;
+		self::$table = $table;
+		self::$user = $username;
+		self::$password = $password;
 		self::$mysqli = new mysqli(self::$host, self::$user, self::$password, self::$db);
 		return is_object(self::$mysqli);
 	}
 
-	//close the database connection
+	/**
+	 * closes the database connection
+	 * @return void
+	 */
 	public static function close_connection(){
 		self::$mysqli->close();
 	}
@@ -105,6 +113,11 @@ class Database {
 //HELPERS
 
 	//series of cleans to be perfomed on one string
+	/**
+	 * [clean_string description]
+	 * @param  string $string
+	 * @return string
+	 */
 	protected static function clean_string($string){
 		$string = htmlspecialchars($string);
 		$string = self::$mysqli->real_escape_string($string);
