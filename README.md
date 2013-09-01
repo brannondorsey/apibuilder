@@ -225,7 +225,7 @@ Default Match()…Against()… MySQL statements search databases using a 50% sim
 
 ###Exact Parameter
 
-The exact parameter is used in conjunction with the column parameters and specifies whether or not their values are queried with relative or exact accuracy. If not included in the url request the `exact` parameter defaults to `false`.
+The exact parameter is used in conjunction with the column parameters and specifies whether or not their values are queried with relative or exact accuracy. If not included in the URL request the `exact` parameter defaults to `false`.
 
 Parameter __key:__ `exact`
 
@@ -233,9 +233,9 @@ Parameter __values:__ `TRUE	` and `FALSE`
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?length_visited=1000&exact=TRUE&limit=5
+	http://fakeorganization.com/api.php?id=10&exact=TRUE
 
-This request will limit the returned results to webages whose length_visited is __only__ 1 second. If the `exact` parameter was not specified, or was set to `FALSE`, the same request could also return webpages whose length_visited have a trailing 1 second (i.e. 11 seconds, 131 seconds, etc…). including `exact=true` parameter in an api http request is equivalent to a `MySQL` `LIKE` statement.
+This request will limit the returned results to the users whose id is __exactly__ 10. If the `exact` parameter was not specified, or was set to `FALSE`, the same request could also return users whose id's have 10 in them (i.e. 1310, 10488, 100 etc…). including `exact=true` parameter in an api http request is equivalent to a `MySQL` `LIKE` statement.
 	
 __Notes:__ `exact`'s values are case insensitive.
 
@@ -243,30 +243,29 @@ __Notes:__ `exact`'s values are case insensitive.
 
 The exclude parameter is used in conjunction with the column parameters to exclude one or more specific webpage's from a query.
 
-
 Parameter __key:__ `exclude`
 
-Parameter __values:__ a comma-delimited list of excluded webpage's `id`'s
+Parameter __values:__ a comma-delimited list of excluded users `id`'s
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?domain=brannondorsey.com&exclude=5,137,1489&limit=50
+	http://fakeorganization.com/api.php?email=@gmail.com&exclude=5,137,1489&limit=50
 
-This example will return the first 50 users other than numbers `5`, `137`, and `1489` whose domain includes brannondorsey.com. 
+This example will return 50 users other than numbers `5`, `137`, and `1489` who use gmail ordered by last name. 
 
 ###Order By Parameter
 
-This parameter is used with the column parameters to sort the returned users by the specified value. If `order_by` is not specified its value defaults to `timestamp`. Order by cannot be used when the `search` parameter is specified.
+This parameter is used with the column parameters to sort the returned users by the specified value. If `order_by` is not specified its value defaults to the value set by the API's `API::set_default_order()` in the `api.php` page. Order by will be ignored when the `search` parameter is specified.
 
 Parameter __key:__ `order_by`
 
-Parameter __value:__ Column name (i.e. `length_visited`) to order by
+Parameter __value:__ Column name (i.e. `id`) to order by
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?domain=buzzfeed.com&order_by=length_visited&limit=15
+	http://fakeorganization.com/api.php?state=VA&order_by=id&limit=15
 
-This request returns the 15 longest visited buzzfeed webpages.
+This request returns the 15 most recent users from Virginia.
 
 ###Flow Parameter
 
@@ -278,30 +277,28 @@ Parameter __value:__ `ASC` or `DESC`
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?keywords=virtual%20reality&order_by=title&flow=ASC
+	http://fakeorganization.com/api.php?state=VA&order_by=id&limit=15&flow=asc
 	
-This request specifies that the results should be ordered in an `ASC` fashion. It would return webpages whose keywords include "virtual reality" in a reverse alphabetical order by title.
-		
+This request returns the 15 __least recent__ users from Virginia.		
 __Notes:__ `flow`'s values are case insensitive.
 
 ###Limit Parameter
 
-The `limit` parameter works similarly to MySQL `LIMIT`. It specifies the max number of users to be returned. The default value, if unspecified is `25`. The max value of results that can be returned in one request is `250`.
+The `limit` parameter works similarly to MySQL `LIMIT`. It specifies the max number of users to be returned. The default value, if unspecified is `25`. The default max value of results that can be returned in one request is `250`. 
 
 Parameter __key:__ `limit`
 
-Parameter __value:__ `int` between `1-250`
+Parameter __value:__ `int` between `1-250` or between `1` and the max value specified by the `api.php` page's `API::set_max_output_number()`.
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?referrer=amazon.com&limit=5
+	http://fakeorganization.com/api.php?state=IL&limit=5
 
-Returns the 5 most recent webpages referred from amazon.com.
+Returns the 5 most recent users from Illinois.
 
-	
 ###Page Parameter
 
-The page parameter is used to keep track of what set (or page) of results are returned. This is similar to the [MySQL OFFSET statement](http://dev.mysql.com/doc/refman/5.0/en/select.html). If not specified the page value will default to `1`.
+The page parameter is used for results pagination. It keeps track of what set (or page) of results are returned. This is similar to the [MySQL OFFSET statement](http://dev.mysql.com/doc/refman/5.0/en/select.html). If not specified the page value will default to `1`.
 
 Parameter __key:__ `page`
 
@@ -309,16 +306,16 @@ Parameter __value:__ `int` greater than `0`
 
 __EXAMPLE:__ 
 
-	http://yourdomain.com/subfolder/server/src/api.php?search=zombie&limit=7&page=3&order_by=length_visited&flow=asc	
+	http://fakeorganization.com/api.php?search=programmer&limit=7&page=3&order_by=id&flow=asc	
 This request will return the 3rd "page" of `search` results. 
 
-For instance, in the absurd example that all webpages had "zombie" as a keyword, setting `page=1` would return webpages with id's `1-7`, setting `page=2` would yield `8-14`, etc…
+For instance, in the unlikely example that all users had "programming" in their bios, setting `page=1` would return webpages with id's `1-7`, setting `page=2` would yield `8-14`, etc…
 
 __Note:__ The MySQL `OFFSET` is calculated server side by multiplying the value of `limit` by the value of `page` minus one. 
 
 ###Count Only Parameter
 
-The `count only` parameter differs from all of the other Indexd API parameters as it __does not__ return an array of user objects. Instead, it returns a single object as the first element in the `data` array. This object has only one property, `count`, where the corresponding `int` value describes the number of results returned by the rest of the url parameters. If the `count_only` parameter is not specified the default value is `FALSE`. When `count_only` is set to `TRUE` the request will __only__ evaluate and return the number of results found by the rest of the url parameters and the request will not return any user data.
+The `count only` parameter differs from all of the other API Builder parameters as it __does not__ return an array of result objects. Instead, it returns a single object as the first element in the `data` array. This object has only one property, `count`, where the corresponding `string` value describes the number of results returned by the rest of the url parameters. If the `count_only` parameter is not specified the default value is `FALSE`. When `count_only` is set to `TRUE` the request will __only__ evaluate and return the number of results found by the rest of the url parameters and the request __will not__ return any user data.
 
 Parameter __key:__ `count_only`
 
@@ -327,25 +324,21 @@ Parameter __values:__ `	TRUE` or `FALSE`
 __EXAMPLE:__
 
      //request
-     http://yourdomain.com/subfolder/server/src/api.php?domain=google.com&count_only=true
+     http://fakeorganization.com/api.php?first_name=Thomas&exact=true&count_only=true
      
      //returns
      {
       "data":[
         {
-        "count":"701"
+        "count":"45"
         }]
      }
      
-This request returns the number of webpages that have "google.com" as the domain. The count value is returned as __a `string`__.
+This request returns the number of users that have the first name "Thomas". The count value is returned as __a `string`__.
 
 __Note:__ The value of `count_only` is case insensitive.
 
 
-##Troubleshooting
-
-Permissions on server are correct?
-
 ##License and Credit
 
-The Quartzite project is developed and maintained by [Brannon Dorsey](http://brannondorsey.com) and is published under the [MIT License](license.txt). If you notice any bugs, have any questions, or would like to help me with development please submit an issue or pull request, write about it on our wiki, or [contact me](mailto:brannon@brannondorsey.com).
+The API Builder PHP Mini Library is developed and maintained by [Brannon Dorsey](http://brannondorsey.com) and is published under the [MIT License](license.txt). If you notice any bugs, have any questions, or would like to help me with development please submit an issue or pull request, write about it on the wiki, or [contact me](mailto:brannon@brannondorsey.com).
