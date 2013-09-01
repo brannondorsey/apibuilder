@@ -6,27 +6,127 @@ class API {
 	public $columns_to_provide;
 
 	protected $API_key_required = false;
+	protected $API_key_column_name = "API_key";
 	protected $default_output_limit = 25;
 	protected $max_output_limit = 250;
 	protected $hits_per_day = 1000;
-	protected $default_order_by = "ORDER BY timestamp ";
-	protected $default_flow = "DESC ";
+	protected $default_order_by = "id"; //MAKE THIS NOTHING AND CHECK IF IT STILL EQUALS NOTHING LATER ON. IF IT DOES THROW AN ERROR.
+	protected $default_flow = "DESC";
 	protected $search_in_boolean_mode = false; //used inside of form query for FULLTEXT searches
 	protected $search_has_been_repeated = false; //used to keep track if search has been repeated
 	protected $search = "";
+	protected $search_allowed = false;
 	protected $no_results_message = "no results found";
+	protected $pretty_print = true;
 	protected $full_text_columns;
 	protected $API_key;
 	
+	/**
+	 * Instantiates API object and creates MySQLi database connection
+	 * @param string $host The hostname where the database will be running (often "localhost");
+	 * @param string $db The database name
+	 * @param string $table The table name the api will use
+	 * @param string $username The username for the database
+	 * @param string $password The password for the database
+	 */
 	public function __construct($host, $db, $table, $username, $password){
 		Database::init_connection($host, $db, $table, $username, $password);
-		$this->columns_to_provide = 
-			"id, timestamp, filename, title, domain, url, referrer, ip, forward_from, author, owner, description, keywords, copywrite";
-		$this->full_text_columns = "url, description, keywords";
 	}
 
-	//Returns a valid JSON string from $_GET values. Array must be sanitized before using this function.
+	//-------------------------------Setup Methods-------------------------------------
 
+	/**
+	 * Tells the API object which column values to use when outputing results objects
+	 * @param  String $columns Comma-delimited list of column names for API to output data from
+	 * @return void
+	 */
+	public function setup($columns){
+		$this->columns_to_provide = $this->format_comma_delimited($columns);
+	}
+
+	/**
+	 * Set the default column for the api to order results by if no 'order_by' parameter is specified in the request 
+	 * @param string $column Name of the column for default order by
+	 */
+	public function set_default_order_by($column){
+		$this->default_order_by = $column;
+	}
+
+	/**
+	 * Set the default flow if none is specified in the request. 
+	 * @param string $flow Default flow to output results in
+	 */
+	public function set_default_flow($flow){
+		if(strtoupper($flow) == "ASC" ||
+		   strtoupper($flow) == "DESC")
+		$this->default_flow = strtoupper($flow);
+	}
+
+	/**
+	 * Set the number of api hits per api key per day
+	 * @param int $number_hits_per_day Number of hits allowed each day per api key
+	 */
+	public function set_hit_limit($number_hits_per_day){
+		$this->hits_per_day = (int) $number_hits_per_day;
+	}
+
+	/**
+	 * Sets the default output limit
+	 * Sets the number of JSON result objects each API request will output if no 'limit' parameter is included in the request
+	 * @param int $default_output
+	 * @return void
+	 */
+	public function set_defualt_output_number($default_output){
+		$this->default_output_limit = (int) $default_output;
+	}
+
+	/**
+	 * Sets the max output results allowed per request
+	 * Sets the max number of JSON result objects each API request will output
+	 * @param int $max_output
+	 * @return void
+	 */
+	public function set_max_output_number($max_output){
+		$this->max_output_limit = (int) $max_output;
+	}
+
+	/**
+	 * Sets the max output results allowed per request
+	 * Sets the max number of JSON result objects each API request will output
+	 * @param boolean $boolean
+	 * @return void
+	 */
+	public function set_pretty_print($boolean){
+		$this->pretty_print = (boolean) $boolean;
+	}
+
+	/**
+	 * [key_required description]
+	 * @param  boolean $boolean
+	 * @param  string $key_column_name Optional parameter that defines the name of the column in the database to be used for the API key. If none is specified "API_key" will be used.
+	 * @return void
+	 */
+	public function set_key_required($boolean, $key_column_name=false){
+		$this->API_key_required = (boolean) $boolean;
+		if($key_column_name) $this->API_key_column_name = $key_column_name;
+	}
+
+	public function set_searchable($columns){
+		$this->full_text_columns = $this->format_comma_delimited($columns);
+		$this->search_allowed = true;
+	}
+
+
+
+	//-------------------------------Other Methods-------------------------------------
+
+
+	/**
+	 * Returns a valid JSON string from $_GET values. Array must be sanitized before using this function.
+	 * 
+	 * @param  array $get_array An assosciative array of API parameter names as keys 
+	 * @return string A JSON string
+	 */
 	public function get_JSON_from_GET(&$get_array){
 
 		$json_obj = new StdClass();
@@ -39,7 +139,6 @@ class API {
 
 		$query = $this->form_query($get_array);
 		if($this->check_API_key()){
-			//$this->JSON_string = $this->query_results_as_array_of_JSON_objs($query, $object_parent_name, true);
 
 			if($results_array = Database::get_all_results($query)){
 
@@ -65,7 +164,7 @@ class API {
 
 			//only attempt to increment the api hit count if this method is called from a PUBLIC API request
 			if($this->API_key_required){
-				$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE API_key = '" . $this->API_key . "' LIMIT 1";
+				$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE $API_key_column_name = '" . $this->API_key . "' LIMIT 1";
 				$result = Database::get_all_results($query);
 				//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
 				if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
@@ -77,78 +176,14 @@ class API {
 		//if there was a search and it returned no results
 		if($this->search != "" &&
 			!$this->search_has_been_repeated &&
-			strstr($this->JSON_string, $this->no_results_message) != false){
+			isset($json_obj->error) &&
+			strstr($json_obj->error, $this->no_results_message) == true){
 				$this->search_in_boolean_mode = true; //set search in boolean mode to true
 				$this->search_has_been_repeated = true; //note that the search will now have been repeated
 			 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
 			 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
 			}
-		return ($pretty_print) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
-	}
-
-
-	// public function query_results_as_array_of_JSON_objs($query, $object_parent_name=NULL, $b_wrap_as_obj=false){
-	// 	$JSON_output_string = "";
-	// 	//if there were results output them as a JSON data obj
-	// 	//echo "the parent name is " . $object_parent_name . " and the boolean is " . $b_wrap_as_obj;
-	// 	if($results_array = Database::get_all_results($query)){
-	// 			//if the objects being output should be wrapped in an object specified by the parameters of this function
-	// 			if($object_parent_name != NULL && $b_wrap_as_obj){
-	// 			 	$JSON_output_string = '{"' . $object_parent_name . '":[';
-	// 			 }
-	// 			$JSON_output_string .= $this->output_objects($results_array);
-	// 			//see above
-	// 			if($object_parent_name != NULL && $b_wrap_as_obj){
-	// 				$JSON_output_string .= ']}';
-	// 			}
-	// 		}
-	// 	//if no results were found return a JSON error obj
-	// 	else $JSON_output_string = $this->get_error($this->no_results_message);
-	// 	return iconv('UTF-8', 'UTF-8//IGNORE', utf8_encode($JSON_output_string)); //make sure all database results are UTF-
-	// }
-
-	// //outputs JSON error object with error message argument
-	// public function get_error($error_message){
-	// 	return "{\"error\": \"$error_message\"}";
-	// }
-
-	//outputs JSON object from 1D or 2D MySQL results array
-	protected function output_objects($mysql_results_array){
-		$JSON_output_string = "";
-		$count_only_key = "count"; //change default COUNT(*) key name
-		if(isset($mysql_results_array[0])){
-			$i = 0;
-			foreach ($mysql_results_array as $user_row) {
-				$JSON_output_string .= "{";
-				foreach($user_row as $key => $value){
-					if($value != ""){
-						if($key == "COUNT(*)") $key = $count_only_key;
-						$JSON_output_string .= '"' . $key . '"' . ':';
-						$JSON_output_string .= '"' . $value . '"';
-						$JSON_output_string .= ',';
-					}
-				}
-				$JSON_output_string = trim($JSON_output_string, ",");
-				$JSON_output_string .= "}";
-				if ($i != sizeof($mysql_results_array) -1) $JSON_output_string .= ',';
-				$i++;
-			}
-		}
-		else{
-			$user_row = $mysql_results_array;
-			$JSON_output_string .= "{";
-				foreach($user_row as $key => $value){
-					if($value != ""){
-						if($key == "COUNT(*)") $key = $count_only_key;
-						$JSON_output_string .= '"' . $key . '"' . ':';
-						$JSON_output_string .= '"' . $value . '"';
-						$JSON_output_string .= ',';
-					}
-				}
-				$JSON_output_string = rtrim($JSON_output_string, ",");
-				$JSON_output_string .= "}";
-		}
-		return $JSON_output_string;
+		return ($pretty_print || $this->pretty_print) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
 	}
 
 	//builds a dynamic MySQL query statement from a $_GET array. Array must be sanitized before using this function.
@@ -171,7 +206,7 @@ class API {
 			if($this->is_column_parameter($parameter, $columns_to_provide_array)){ 
 				$column_parameters[$parameter] = $value;
 			}
-			else if($parameter == 'search') $this->search = $value;
+			else if($parameter == 'search' && $this->search_allowed) $this->search = $value;
 			else if($parameter =='order_by') $order_by = $value;
 			else if($parameter == 'flow') $flow = $value;
 			else if($parameter == 'limit') $limit = $value;
@@ -237,7 +272,7 @@ class API {
 			$this->is_column_parameter($order_by, $columns_to_provide_array)){
 				$order_by_string = "ORDER BY $order_by ";
 			}
-			else $order_by_string = $this->default_order_by;
+			else $order_by_string = "ORDER BY " . $this->default_order_by . " ";
 			$query .= $order_by_string;
 
 			//add FLOW statement
@@ -248,7 +283,7 @@ class API {
 			$flow == 'DESC'){
 				$flow_string = "$flow ";
 			}
-			else $flow_string = $this->default_flow;
+			else $flow_string = $this->default_flow . " ";
 			$query .= $flow_string;
 		}
 		//only add LIMIT of it is not a COUNT query
@@ -336,6 +371,15 @@ class API {
 	//checks if a parameter string is also the name of a SELECT statement's requested column
 	protected function is_column_parameter($parameter_name, $columns_to_provide_array){
 		return in_array ($parameter_name, $columns_to_provide_array);
+	}
+
+	protected function format_comma_delimited($list){
+		$array = explode(",", $list);
+		$string_to_return = "";
+		foreach($array as $list_item){
+			$string_to_return .= trim($list_item) . ", ";
+		}
+		return rtrim($string_to_return, ", ");
 	}
 
 }
