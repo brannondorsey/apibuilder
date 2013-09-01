@@ -9,15 +9,15 @@ class API {
 	protected $private = false;
 
 	//API key default properties
-	protected $API_key_required = false;
-	protected $API_key_column_name = "API_key";
+	protected $API_key_required          = false;
+	protected $API_key_column_name       = "API_key";
 	protected $API_hit_count_column_name = "API_hits";
-	protected $API_hit_date_column_name = "API_hit_date";
-	protected $hits_per_day = 1000;
+	protected $API_hit_date_column_name  = "API_hit_date";
+	protected $hits_per_day              = 1000;
 
 	//limit default properties
 	protected $default_output_limit = 25;
-	protected $max_output_limit = 250;
+	protected $max_output_limit     = 250;
 
 	//order and flow default properties
 	protected $default_order_by;
@@ -25,8 +25,7 @@ class API {
 
 	//search default properties
 	protected $search_allowed = false;
-	protected $search_in_boolean_mode = false; //used inside of form query for FULLTEXT searches
-	protected $search_has_been_repeated = false; //used to keep track if search has been repeated
+	protected $default_search_order_by;
 
 	//default pretty print property
 	protected $pretty_print = true;
@@ -34,6 +33,8 @@ class API {
 	//default no results message
 	protected $no_results_message = "no results found";
 
+	protected $search_in_boolean_mode   = false; //used inside of form query for FULLTEXT searches
+	protected $search_has_been_repeated = false; //used to keep track if search has been repeated
 	protected $private_key;
 	protected $API_key;
 	protected $full_text_columns;
@@ -68,8 +69,12 @@ class API {
 	 * Set the default column for the api to order results by if no 'order_by' parameter is specified in the request 
 	 * @param string $column Name of the column for default order by
 	 */
-	public function set_default_order_by($column){
-		$this->default_order_by = $column;
+	public function set_default_order($column){
+		$this->default_order_by = (string) $column;
+	}
+
+	public function set_default_search_order($column){
+		$this->default_search_order_by = (string) $column;
 	}
 
 	/**
@@ -284,7 +289,10 @@ class API {
 	 * @return boolean
 	 */
 	protected function find_config_errors(){
-		if(!isset($this->default_order_by)) $this->config_errors[] = "a default order must be specified using API::set_default_order_by()";
+		if(!isset($this->default_order_by)) $this->config_errors[] = "a default order must be specified using API::set_default_order()";
+		if(!isset($this->default_search_order_by) && $this->search_allowed){
+			$this->config_errors[] = "a default search order must be specified using API::set_default_search_order() if search is enable with API::set_searchable()";
+		}
 		if(!isset($this->columns_to_provide)) $this->config_errors[] = "output columns must be specified using API::setup()";
 		if(!empty($this->config_errors)){ 
 			return true; //errors exist

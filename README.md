@@ -16,7 +16,8 @@ You can direct download a .zip of API Builder by clicking [here](COME BACK).
 
 ###Example
 
-This example illustrates how a [Quartzite API](https://github.com/brannondorsey/quartzite) could be setup. Use the `api_template.php` to create your own api.
+Throughout this reference an example database will be used. 
+This example table named `users` holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
 
 ```php
 <?php
@@ -32,27 +33,22 @@ This example illustrates how a [Quartzite API](https://github.com/brannondorsey/
 
 	  	//specify the columns that will be output by the api
 	  	$columns = "id, 
-	  				timestamp, 
-	  				filename, 
-	  				title, 
-	  				domain, 
-	  				url, 
-	  				referrer, 
-	  				ip, 
-	  				forward_from, 
-	  				author, 
-	  				owner, 
-	  				description, 
-	  				keywords, 
-	  				copywrite";
+	  				first_name,
+	  				last_name,
+	  				email,
+	  				phone_number,
+	  				city,
+	  				state,
+	  				bio";
 
 	  	//setup the API
 	  	//the API constructor takes parameters in this order: host, database, table, username, password
-	  	$api = new API("localhost", "quartzite", "metadata", "root", "root");
-	  	$api->setup($columns);
-	  	$api->set_default_order_by("timestamp");
-	  	$api->set_searchable("url, description, keywords");
-	  	$api->set_pretty_print(true);
+	  	$api = new $API("localhost", "organization", "users", "username", "secret_password");
+		$api->setup($columns);
+		$api->set_default_order("last_name");
+		$api->set_searchable("first_name, last_name, email, city, state, bio");
+		$api->set_default_search_order("last_name");
+		$api->set_pretty_print(true);
 
 	  	//sanitize the contents of $_GET to insure that 
 	  	//malicious strings cannot disrupt your database
@@ -64,23 +60,142 @@ This example illustrates how a [Quartzite API](https://github.com/brannondorsey/
 ?>
 ```
 
+Use the `api_template.php` to create your own api.
+
 ##Customizing your API
 
 
-##API Parameter Reference
+##Using your API
 
-This section documents in detail all of the API Builder URL parameters currently available to use when making an http request to your api.
+Using your API is easy once you learn how it works. 
 
-For this reference an example database will be used. This example table named `users` holds information about imaginary users that belong to an organization. The setup for this imaginary api is as follows:
+####Formatting a request
+
+The API Builder queries [MySQL](https://en.wikipedia.org/wiki/MySQL) Databases and so the http requests used to return data is very similar to forming a MySQL `SELECT` query statement. If you have used MySQL before, think of using the api URL parameters as little pieces of a query. For instance, the `limit`, `order_by`, and `flow` (my nickname for MySQL `ORDER BY`'s `DESC` or `ASC`) parameters translate directly into a MySQL statement on your server.
+
+####<a id="example-request"></a>Example Request
+     http://fakeorganization.com/api.php?search=thompson&order_by=id&limit=50
+     
+The above request would return the 50 newest users who have thompson included somewhere in their first_name, last_name, email, city, state or bio columns.
+
+####Notable Parameters
+
+- `search` uses a MySQL FULLTEXT search to find the most relevant results in the database to the parameter's value.
+- `order_by` returns results ordered by the column name given as the parameter's value.
+- `limit` specifies the number of returned results. If not included as a parameter the default value is `25`. Max value is `250`.
+- `page` uses a MySQL `OFFSET` to return the contents of a hypothetical "page" of results in the database. Used most effectively when paired with `limit`.
+
+A full list of all API Builder's parameters are specified in the [Parameter Reference](#api-parameter-reference) section of this Documentation.
+
+
+###Returned JSON
+
+All data returned by the api is wrapped in a `json` object with a `data` array. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
+
+Inside the `data` property is an array of objects that are returned as a result of the URL parameters that will be outlined shortly.
+
+```json
+{
+    "data": [
+        {
+            "id": "1035",
+            "first_name": "Thomas",
+            "last_name": "Robinson",
+            "email": "thomasrobinson@gmail.com",
+            "phone_number": "8042123478",
+            "city": "Richmond",
+            "state": "VA",
+            "bio": "I am a teacher in the Richmond City Public School System"
+        },
+        {
+            "id": "850",
+            "first_name": "George",
+            "last_name": "Gregory",
+            "email": "gregg@gmail.com",
+            "phone_number": "8043703986",
+            "city": "Richmond",
+            "state": "VA",
+            "bio": "I am creative coder from Richmond"
+        }
+    ]
+}
+```
+
+__Note:__ The `data` object always contains an array of objects even if there is only one result.
+
+The API allows you access to each webpage's:
+
+`id`, `timestamp`, `firstname`, `title`, `domain`, `url`, `length_visited`, `referrer`, `ip`, `forward_from` (if the IP Address was forwarded), `author`, `owner`, `description`, `keywords`, and `copywrite`.
+
+These webpage object properties correspond to the column names in the MySQL database. Each object contains these proprties as long as they are not empty. Because `<meta>` tags are optional often many of them are empty.
+
+##Examples
+
+Because the api outputs data using `JSON` the results of an api http request can be loaded into a project written in almost any popular language. I have chosen to provide brief code examples using `PHP`, however, these code snippets outline the basics of loading and using your Quartzite data and easily apply to another language. 
+
+###Using the Data
 
 ```php
-$api = new $API("localhost", "organization", "users", "username", "secret_password");
-$api->setup("id, first_name, last_name, email, phone_number, city, state, bio");
-$api->set_default_order_by("last_name");
-$api->set_searchable("first_name, last_name, email, city, state, bio");
-$api->set_pretty_print(true);
+<?php
+$month = "2013-8";
+$referrer = "google.com";
 
-``` 
+$http_request = "http://yourdomain.com/subfoler/server/src/api.php?timestamp=". $month
+. "&referrer=" . $referrer;
+	
+$json_string = file_get_contents($http_request);
+$jsonObj = json_decode($json_string);
+	
+//loop through each user object inside of the "data" array
+foreach($jsonObj->data as $webpage){
+   //do something with each result inside of here...
+   //for example, print some of their info to the browser
+   echo "This webpage's domain is " . $webpage->domain . "<br/>";
+   echo "This webpage's timetamp is " . $user->timestamp . "<br/>";
+   echo "This webpage was focused for is " . $user->length_visited/1000 . "seconds";
+   echo "<br/>";
+}
+?>
+```
+
+###Error Handling
+
+Often requests to the api return no results because no webpages were found that met the request's criteria. For this reason it is important to know how to handle the the api `error`. The `JSON` that is returned in this instance is `{"error": "no results found"}`.
+
+Handling `errors` is simple. All that you need to do is check if the `error` property exists in the resulting `JSON` object. If it does execute the code for when an error is present. Otherwise, continue with the program because the request returned at least one webpage object.
+
+```php
+<?php 
+$month = "2013-8";
+$referrer = "google.com";
+
+$http_request = "http://yourdomain.com/subfoler/server/src/api.php?timestamp=". $month
+. "&referrer=" . $referrer;
+	
+$json_string = file_get_contents($http_request);
+$jsonObj = json_decode($json_string);
+	
+//check for an error
+if(isset($jsonObj->error)){
+	//code for handling the error goes in here...
+	//for example, print the error message to the browser
+	echo $jsonObj->error;
+
+}else{
+	//execute the code for when user objects are returned…
+	//for example, list the ids of the resulting users
+	foreach($jsonObj->data as $webpage){
+		echo "This webpage's url is " . $webpage->url . "<br/>";
+	}
+}
+?>
+```
+
+##API Parameter Reference
+
+This section documents in detail all of the API Builder URL parameters currently available to use when making an http request to your API.
+
+It uses a made up table with a setup that is specifed [earlier in this documentation](COME BACK). 
 
 ###Column Parameters
 Column parameters allow you to query data for a specific value where the parameter key is specified to be the column in your database. Column parameters can be stacked for more specific queries.
@@ -94,11 +209,7 @@ __Example:__
 
       http://fakeorganization.com/api.php?last_name=thompson&limit=10
       
-This example piggybacks off of the [example request](#example-request) used in the [Getting Started](#getting-started) section of this documentation. This request would yield more accurate results if you were looking for webpages where the domain is wired.com. The previous method using the `search` parameter would have given any results that include wired.com somewhere in the website's metadata.
-
-If you were looking for the 10 most recent wired.com visits that came from facebook the http request would look like this:
-
-     http://yourdomain.com/subfolder/server/src/api.php?domain=wired.com&referrer=facebook.com&limit=10
+This example request would return up to 10 users who's last name are thompson ordered alphabetically by last name.
 
 __Notes:__ The column parameter's are overridden if a `search` parameter is specified. 
 
@@ -111,7 +222,7 @@ Parameter __value:__ desired query `string`
 
 __Example:__
 
-	http://yourdomain.com/subfolder/server/src/api.php?search=design
+	http://fakeorganization.com/api.php?search=design
 
 __Notes:__ `search` results are automatically ordered by relevancy, or if relevancy is found to be arbitrary, by `timestamp`. The `order_by` parameter cannot be used when the `search` parameter is specified. More on why below…
 

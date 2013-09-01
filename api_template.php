@@ -25,8 +25,9 @@
 	  				   "your_database_password");
 
 	  	$api->setup($columns);
-	  	$api->set_default_order_by("column_name");
+	  	$api->set_default_order("column_name");
 	  	$api->set_searchable("column_name, column_name, etc...");
+	  	$api->set_default_search_order("column_name");
 	  	$api->set_pretty_print(true);
 
 	  	//sanitize the contents of $_GET to insure that 

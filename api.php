@@ -28,8 +28,9 @@
 	  	//setup the API
 	  	$api = new API("localhost", "quartzite", "metadata", "root", "root");
 	  	$api->setup($columns);
-	  	$api->set_default_order_by("timestamp");
+	  	$api->set_default_order("timestamp");
 	  	$api->set_searchable("url, description, keywords");
+	  	//$api->set_default_search_order("timestamp");
 	  	$api->set_pretty_print(true);
 
 	  	//sanitize the contents of $_GET to insure that 
