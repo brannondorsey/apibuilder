@@ -90,7 +90,7 @@ A full list of all API Builder's parameters are specified in the [Parameter Refe
 
 ###Returned JSON
 
-All data returned by the api is wrapped in a `json` object with a `data` array. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
+All data returned by your API is wrapped in a `json` object with a `data` array. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
 
 Inside the `data` property is an array of objects that are returned as a result of the URL parameters that will be outlined shortly.
 
@@ -121,38 +121,30 @@ Inside the `data` property is an array of objects that are returned as a result 
 }
 ```
 
-__Note:__ The `data` object always contains an array of objects even if there is only one result.
+__Note:__ The `data` property is always an array of objects even if there is only one result.
 
-The API allows you access to each webpage's:
+##Using the Data
 
-`id`, `timestamp`, `firstname`, `title`, `domain`, `url`, `length_visited`, `referrer`, `ip`, `forward_from` (if the IP Address was forwarded), `author`, `owner`, `description`, `keywords`, and `copywrite`.
+Because the API outputs data using `JSON` the results of an API http request can be loaded into a project written in almost any language. I have chosen to provide brief code examples using `PHP`, however, these code snippets outline the basics of loading and using your your data and easily apply to another language. 
 
-These webpage object properties correspond to the column names in the MySQL database. Each object contains these proprties as long as they are not empty. Because `<meta>` tags are optional often many of them are empty.
-
-##Examples
-
-Because the api outputs data using `JSON` the results of an api http request can be loaded into a project written in almost any popular language. I have chosen to provide brief code examples using `PHP`, however, these code snippets outline the basics of loading and using your Quartzite data and easily apply to another language. 
-
-###Using the Data
 
 ```php
 <?php
-$month = "2013-8";
-$referrer = "google.com";
+$city = "Richmond";
+$bio = "artist";
 
-$http_request = "http://yourdomain.com/subfoler/server/src/api.php?timestamp=". $month
-. "&referrer=" . $referrer;
+$http_request = "http://fakeorganization.com/api.php?city=$city&bio=$bio&limit=10";
 	
 $json_string = file_get_contents($http_request);
 $jsonObj = json_decode($json_string);
 	
 //loop through each user object inside of the "data" array
-foreach($jsonObj->data as $webpage){
+foreach($jsonObj->data as $user){
    //do something with each result inside of here...
    //for example, print some of their info to the browser
-   echo "This webpage's domain is " . $webpage->domain . "<br/>";
-   echo "This webpage's timetamp is " . $user->timestamp . "<br/>";
-   echo "This webpage was focused for is " . $user->length_visited/1000 . "seconds";
+   echo "This user's first name is " . $user->first_name . "<br/>";
+   echo "This user's last name is " . $user->last_name . "<br/>";
+   echo "This user's email is " . $user->email;
    echo "<br/>";
 }
 ?>
@@ -160,34 +152,37 @@ foreach($jsonObj->data as $webpage){
 
 ###Error Handling
 
-Often requests to the api return no results because no webpages were found that met the request's criteria. For this reason it is important to know how to handle the the api `error`. The `JSON` that is returned in this instance is `{"error": "no results found"}`.
+Often requests to the api return no results because no results were found that met the request's criteria. For this reason it is important to know how to handle the the api `error`. The `JSON` that is returned in this instance is `{"error": "no results found"}`.
 
-Handling `errors` is simple. All that you need to do is check if the `error` property exists in the resulting `JSON` object. If it does execute the code for when an error is present. Otherwise, continue with the program because the request returned at least one webpage object.
+Handling `errors` is simple. All that you need to do is check if the `error` property exists in the resulting `JSON` object. If it does execute the code for when an error is present. Otherwise, continue with the program because the request returned at least one result object.
 
 ```php
-<?php 
-$month = "2013-8";
-$referrer = "google.com";
+<?php
+$city = "Richmond";
+$bio = "artist";
 
-$http_request = "http://yourdomain.com/subfoler/server/src/api.php?timestamp=". $month
-. "&referrer=" . $referrer;
+$http_request = "http://fakeorganization.com/api.php?city=$city&bio=$bio&limit=10";
 	
 $json_string = file_get_contents($http_request);
 $jsonObj = json_decode($json_string);
-	
+
 //check for an error
 if(isset($jsonObj->error)){
 	//code for handling the error goes in here...
 	//for example, print the error message to the browser
 	echo $jsonObj->error;
-
-}else{
-	//execute the code for when user objects are returned…
-	//for example, list the ids of the resulting users
-	foreach($jsonObj->data as $webpage){
-		echo "This webpage's url is " . $webpage->url . "<br/>";
+	}else{
+		//execute the code for when user objects are returned…
+		//loop through each user object inside of the "data" array
+		foreach($jsonObj->data as $user){
+		   //do something with each result inside of here...
+		   //for example, print some of their info to the browser
+		   echo "This user's first name is " . $user->first_name . "<br/>";
+		   echo "This user's last name is " . $user->last_name . "<br/>";
+		   echo "This user's email is " . $user->email;
+		   echo "<br/>";
+		}
 	}
-}
 ?>
 ```
 
