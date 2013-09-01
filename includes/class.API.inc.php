@@ -5,6 +5,9 @@ class API {
 
 	public $columns_to_provide;
 
+	//default API access 
+	protected $private = false;
+
 	//API key default properties
 	protected $API_key_required = false;
 	protected $API_key_column_name = "API_key";
@@ -31,6 +34,7 @@ class API {
 	//default no results message
 	protected $no_results_message = "no results found";
 
+	protected $private_key;
 	protected $API_key;
 	protected $full_text_columns;
 	protected $search = "";
@@ -66,6 +70,18 @@ class API {
 	 */
 	public function set_default_order_by($column){
 		$this->default_order_by = $column;
+	}
+
+	/**
+	 * Makes the API private
+	 * Takes the SHA1 private key to authorize each request as parameter 
+	 * @param string $private_key 40 character SHA1
+	 */
+	public function set_private($private_key){
+		$private_key = (string) $private_key;
+		if(strlen($private_key) != 40) $this->config_errors[] = "API::set_private() parameter must be a 40 character SHA1 string";
+		$this->private_key = $private_key;
+		$this->private = true;
 	}
 
 	/**
@@ -171,56 +187,65 @@ class API {
 				$pretty_print = true;
 			}
 
-			$query = $this->form_query($get_array);
-			if($this->check_API_key()){
-				//if search was included as a parameter in the http request but it isn't allowed in the api's config...
-				if(isset($get_array['search']) &&
-				   !$this->search_allowed){
-					$json_obj->error = "search parameter not enabled for this API";
-				}else{
-					if($results_array = Database::get_all_results($query)){
+			//if API is public or if API is private and a correct private key was provided
+			if(!$this->private ||
+				$this->private &&
+				isset($get_array['private_key']) &&
+				$this->private_key == $get_array['private_key']){
 
-				 		if(is_array($results_array)){
-				 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
-				 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
-				 			$results_array = array_filter(array_map('array_filter', $results_array));
+				$query = $this->form_query($get_array);
+				if($this->check_API_key()){
+					//if search was included as a parameter in the http request but it isn't allowed in the api's config...
+					if(isset($get_array['search']) &&
+					   !$this->search_allowed){
+						$json_obj->error = "search parameter not enabled for this API";
+					}else{
+						if($results_array = Database::get_all_results($query)){
 
-				 			foreach($results_array as $result_array){
-				 				foreach($result_array as $key => $value){
-				 					if($key == "COUNT(*)"){
-				 						$count = $value;
-				 						break;
-				 					}
-				 				}
-				 			}
-				 			if(!isset($count)) $json_obj->data = $results_array;
-				 			else $json_obj->count = $count; 
-				 			//COME BACK need to make count only parameter work
-				 		}
-			 		}else $json_obj->error = "no results found";
-			 	}
+					 		if(is_array($results_array)){
+					 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
+					 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
+					 			$results_array = array_filter(array_map('array_filter', $results_array));
 
-				//only attempt to increment the api hit count if this method is called from a PUBLIC API request
-				if($this->API_key_required){
-					$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE " . $this->API_key_column_name . " = '" . $this->API_key . "' LIMIT 1";
-					$result = Database::get_all_results($query);
-					//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
-					if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
-					 $json_obj->error = "API hit limit reached";
-			   		}
-				 }
-			}
-			else $json_obj->error = "API key is invalid or was not provided";
-			//if there was a search and it returned no results
-			if($this->search != "" &&
-				!$this->search_has_been_repeated &&
-				isset($json_obj->error) &&
-				strstr($json_obj->error, $this->no_results_message) == true){
-					$this->search_in_boolean_mode = true; //set search in boolean mode to true
-					$this->search_has_been_repeated = true; //note that the search will now have been repeated
-				 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
-				 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
+					 			foreach($results_array as $result_array){
+					 				foreach($result_array as $key => $value){
+					 					if($key == "COUNT(*)"){
+					 						$count = $value;
+					 						break;
+					 					}
+					 				}
+					 			}
+					 			if(!isset($count)) $json_obj->data = $results_array;
+					 			else $json_obj->count = $count; 
+					 			//COME BACK need to make count only parameter work
+					 		}
+				 		}else $json_obj->error = "no results found";
+				 	}
+
+					//only attempt to increment the api hit count if this method is called from a PUBLIC API request
+					if($this->API_key_required){
+						$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE " . $this->API_key_column_name . " = '" . $this->API_key . "' LIMIT 1";
+						$result = Database::get_all_results($query);
+						//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
+						if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
+						 $json_obj->error = "API hit limit reached";
+				   		}
+					 }
 				}
+				else $json_obj->error = "API key is invalid or was not provided";
+				//if there was a search and it returned no results
+				if($this->search != "" &&
+					!$this->search_has_been_repeated &&
+					isset($json_obj->error) &&
+					strstr($json_obj->error, $this->no_results_message) == true){
+						$this->search_in_boolean_mode = true; //set search in boolean mode to true
+						$this->search_has_been_repeated = true; //note that the search will now have been repeated
+					 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
+					 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
+				}
+			}else{ //API is private but private_key is invalid or was not provided
+				$json_obj->error = "this API is private and the private key was invalid or not provided";
+			}
 		}else{ //config errors were present
 			$pretty_print = true; //always output errors in pretty print for readability
 			$json_obj->config_error = $this->config_errors;

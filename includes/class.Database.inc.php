@@ -3,7 +3,7 @@
 class Database {
 
 	public static $root_dir_link = "http://localhost:8888/api_builder";
-	public static $key;
+	public static $private_key;
 
 	//MySQL database info
 	protected static $host;

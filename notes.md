@@ -2,8 +2,12 @@
 
 ##Todo
 
-- Document all functions with function comments
 - Suppress Warnings on api page
+- Make a set_private_key method (To allow users to make their json private)
+- Document in README
+- Document all functions with function comments
+- Make PHPDocumenter documentation (if I am feelin jivey)
+- figure out whats up with why `API::check_API_key()` auto returns true.
 
 ##Completed
 
