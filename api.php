@@ -1,12 +1,15 @@
 <?php
 
+	 //include the API Builder mini lib
 	 require_once("includes/class.API.inc.php");
-	 header("Content-Type: text/javascript; charset=utf-8");
 
+	 //set page to output JSON
+	 header("Content-Type: text/javascript; charset=utf-8");
 	 
+	  //If API parameters were included in the http request via $_GET...
 	  if(isset($_GET) && !empty($_GET)){
 
-	  	$api = new API("localhost", "quartzite", "metadata", "root", "root");
+	  	//specify the columns that will be output by the api
 	  	$columns = "id, 
 	  				timestamp, 
 	  				filename, 
@@ -22,13 +25,18 @@
 	  				keywords, 
 	  				copywrite";
 
+	  	//setup the API
+	  	$api = new API("localhost", "quartzite", "metadata", "root", "root");
 	  	$api->setup($columns);
 	  	$api->set_default_order_by("timestamp");
 	  	$api->set_searchable("url, description, keywords");
 	  	$api->set_pretty_print(true);
-	 	$json_obj = new StdClass();
 
+	  	//sanitize the contents of $_GET to insure that 
+	  	//malicious strings cannot disrupt your database
 	 	$get_array = Database::clean($_GET);
+
+	 	//output the results of the http request
 	 	echo $api->get_JSON_from_GET($get_array);
 	}
 ?>
