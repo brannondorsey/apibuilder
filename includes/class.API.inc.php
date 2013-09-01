@@ -5,21 +5,36 @@ class API {
 
 	public $columns_to_provide;
 
+	//API key default properties
 	protected $API_key_required = false;
 	protected $API_key_column_name = "API_key";
+	protected $API_hit_count_column_name = "API_hits";
+	protected $API_hit_date_column_name = "API_hit_date";
+	protected $hits_per_day = 1000;
+
+	//limit default properties
 	protected $default_output_limit = 25;
 	protected $max_output_limit = 250;
-	protected $hits_per_day = 1000;
-	protected $default_order_by = "id"; //MAKE THIS NOTHING AND CHECK IF IT STILL EQUALS NOTHING LATER ON. IF IT DOES THROW AN ERROR.
+
+	//order and flow default properties
+	protected $default_order_by;
 	protected $default_flow = "DESC";
+
+	//search default properties
+	protected $search_allowed = false;
 	protected $search_in_boolean_mode = false; //used inside of form query for FULLTEXT searches
 	protected $search_has_been_repeated = false; //used to keep track if search has been repeated
-	protected $search = "";
-	protected $search_allowed = false;
-	protected $no_results_message = "no results found";
+
+	//default pretty print property
 	protected $pretty_print = true;
-	protected $full_text_columns;
+
+	//default no results message
+	protected $no_results_message = "no results found";
+
 	protected $API_key;
+	protected $full_text_columns;
+	protected $search = "";
+	protected $config_errors;
 	
 	/**
 	 * Instantiates API object and creates MySQLi database connection
@@ -30,7 +45,8 @@ class API {
 	 * @param string $password The password for the database
 	 */
 	public function __construct($host, $db, $table, $username, $password){
-		Database::init_connection($host, $db, $table, $username, $password);
+		$this->config_errors = array();
+		if(!Database::init_connection($host, $db, $table, $username, $password)) $this->config_errors[] = "database connection failed, make sure the connection info passed into API::__construct(\$host, \$db, \$table, \$username, \$password) is correct";
 	}
 
 	//-------------------------------Setup Methods-------------------------------------
@@ -63,7 +79,7 @@ class API {
 	}
 
 	/**
-	 * Set the number of api hits per api key per day
+	 * Set the number of api hits per API key per day
 	 * @param int $number_hits_per_day Number of hits allowed each day per api key
 	 */
 	public function set_hit_limit($number_hits_per_day){
@@ -101,89 +117,153 @@ class API {
 	}
 
 	/**
-	 * [key_required description]
+	 * Makes API require a unique key for each request.
 	 * @param  boolean $boolean
 	 * @param  string $key_column_name Optional parameter that defines the name of the column in the database to be used for the API key. If none is specified "API_key" will be used.
+	 * @param  string $hit_count_column_name Optional parameter that defines the name of the column in the database to be used for the API hit count. If none is specified "API_hits" will be used.
+	 * @param  string $hit_date_column_name Optional parameter that defines the name of the column in the database to be used for the API hit date. If none is specified "API_hit_date" will be used.
 	 * @return void
 	 */
-	public function set_key_required($boolean, $key_column_name=false){
+	public function set_key_required($boolean, $key_column_name=false, $hit_count_column_name=false, $hit_date_column_name=false){
 		$this->API_key_required = (boolean) $boolean;
 		if($key_column_name) $this->API_key_column_name = $key_column_name;
+		if($hit_count_column_name) $this->API_hit_count_column_name = $hit_count_column_name;
+		if($hit_date_column_name) $this->API_hit_date_column_name = $hit_date_column_name;
 	}
 
+	/**
+	 * Enables the api 'search' parameter and specifies which columns can be searched
+	 * Note: $columns must be Fulltext enabled in your database's table structure
+	 * @param string $columns Comma-delimited list of column names 
+	 */
 	public function set_searchable($columns){
 		$this->full_text_columns = $this->format_comma_delimited($columns);
 		$this->search_allowed = true;
 	}
 
-
+	/**
+	 * Sets the error value when no results are found in a request
+	 * Note: It is recommended to use a lower case $message string per this API class error standard
+	 * @param string $message The error value to use when no results are found
+	 */
+	public function set_no_results_message($message){
+		$this->no_results_message = (string) $message;
+	}
 
 	//-------------------------------Other Methods-------------------------------------
 
 
 	/**
-	 * Returns a valid JSON string from $_GET values. Array must be sanitized before using this function.
-	 * 
+	 * Returns valid JSON results from API parameters
+	 * This is the method that makes the api output it's results. Array must be sanitized before using this function
 	 * @param  array $get_array An assosciative array of API parameter names as keys 
-	 * @return string A JSON string
+	 * @return string A JSON string representing the request's results
 	 */
 	public function get_JSON_from_GET(&$get_array){
 
 		$json_obj = new StdClass();
 		$pretty_print = false;
 
-		if(isset($get_array['pretty_print']) && 
-		   strtolower($get_array['pretty_print']) == "true"){
-			$pretty_print = true;
-		}
+		if(!$this->find_config_errors()){
 
-		$query = $this->form_query($get_array);
-		if($this->check_API_key()){
-
-			if($results_array = Database::get_all_results($query)){
-
-		 		if(is_array($results_array)){
-		 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
-		 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
-		 			$results_array = array_filter(array_map('array_filter', $results_array));
-
-		 			foreach($results_array as $result_array){
-		 				foreach($result_array as $key => $value){
-		 					if($key == "COUNT(*)"){
-		 						$count = $value;
-		 						break;
-		 					}
-		 				}
-		 			}
-		 			if(!isset($count)) $json_obj->data = $results_array;
-		 			else $json_obj->count = $count; 
-		 			//COME BACK need to make count only parameter work
-		 		}
-
-		 	}else $json_obj->error = "no results found";
-
-			//only attempt to increment the api hit count if this method is called from a PUBLIC API request
-			if($this->API_key_required){
-				$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE $API_key_column_name = '" . $this->API_key . "' LIMIT 1";
-				$result = Database::get_all_results($query);
-				//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
-				if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
-				 $json_obj->error = "API hit limit reached";
-		   		}
-			 }
-		}
-		else $json_obj->error = "API key is invalid or was not provided";
-		//if there was a search and it returned no results
-		if($this->search != "" &&
-			!$this->search_has_been_repeated &&
-			isset($json_obj->error) &&
-			strstr($json_obj->error, $this->no_results_message) == true){
-				$this->search_in_boolean_mode = true; //set search in boolean mode to true
-				$this->search_has_been_repeated = true; //note that the search will now have been repeated
-			 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
-			 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
+			if(isset($get_array['pretty_print']) && 
+			   strtolower($get_array['pretty_print']) == "true"){
+				$pretty_print = true;
 			}
+
+			$query = $this->form_query($get_array);
+			if($this->check_API_key()){
+				//if search was included as a parameter in the http request but it isn't allowed in the api's config...
+				if(isset($get_array['search']) &&
+				   !$this->search_allowed){
+					$json_obj->error = "search parameter not enabled for this API";
+				}else{
+					if($results_array = Database::get_all_results($query)){
+
+				 		if(is_array($results_array)){
+				 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
+				 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
+				 			$results_array = array_filter(array_map('array_filter', $results_array));
+
+				 			foreach($results_array as $result_array){
+				 				foreach($result_array as $key => $value){
+				 					if($key == "COUNT(*)"){
+				 						$count = $value;
+				 						break;
+				 					}
+				 				}
+				 			}
+				 			if(!isset($count)) $json_obj->data = $results_array;
+				 			else $json_obj->count = $count; 
+				 			//COME BACK need to make count only parameter work
+				 		}
+			 		}else $json_obj->error = "no results found";
+			 	}
+
+				//only attempt to increment the api hit count if this method is called from a PUBLIC API request
+				if($this->API_key_required){
+					$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE " . $this->API_key_column_name . " = '" . $this->API_key . "' LIMIT 1";
+					$result = Database::get_all_results($query);
+					//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
+					if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
+					 $json_obj->error = "API hit limit reached";
+			   		}
+				 }
+			}
+			else $json_obj->error = "API key is invalid or was not provided";
+			//if there was a search and it returned no results
+			if($this->search != "" &&
+				!$this->search_has_been_repeated &&
+				isset($json_obj->error) &&
+				strstr($json_obj->error, $this->no_results_message) == true){
+					$this->search_in_boolean_mode = true; //set search in boolean mode to true
+					$this->search_has_been_repeated = true; //note that the search will now have been repeated
+				 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
+				 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
+				}
+		}else{ //config errors were present
+			$pretty_print = true; //always output errors in pretty print for readability
+			$json_obj->config_error = $this->config_errors;
+		}
 		return ($pretty_print || $this->pretty_print) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
+	}
+
+	//need to put call_limit_reached inside of update_API_hits or something.
+	//fails to reset api calls when the call once the call limit has been reached.
+
+	/**
+	 * Handles the incrementing of a key's API hits.
+	 * Returns false if the user's key has maxed out hits for the day
+	 * @param  string $API_key
+	 * @param  string $API_hit_date
+	 * @return void/false
+	 */
+	public function update_API_hits($API_key, $API_hit_date){
+		//if the api has already been hit today
+		if(date('Ymd') == date('Ymd', strtotime($API_hit_date))){
+			//make sure that the key hasn't hit its limit.
+			//if it has return false
+			if(!$this->call_limit_reached($API_key)){
+				$query = "UPDATE " . Database::$table . " SET " . $this->API_hit_count_column_name . "=" . $this->API_hit_count_column_name . "+1 WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
+				Database::execute_sql($query);
+			}else return false;
+		}else{ //if the API has not been hit today set the hits to zero and the hit date to today
+			$now = new DateTime();
+			$query = "UPDATE " . Database::$table . " SET " . $this->API_hit_count_column_name . " = 0, " . $this->API_hit_date_column_name . "='" . $now->format(DateTime::ISO8601) . "' WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
+			Database::execute_sql($query);
+		}
+	}
+
+	/**
+	 * Adds config errors and returns boolean representing their presence
+	 * @return boolean
+	 */
+	protected function find_config_errors(){
+		if(!isset($this->default_order_by)) $this->config_errors[] = "a default order must be specified using API::set_default_order_by()";
+		if(!isset($this->columns_to_provide)) $this->config_errors[] = "output columns must be specified using API::setup()";
+		if(!empty($this->config_errors)){ 
+			return true; //errors exist
+		}else return false; //errors don't exist
 	}
 
 	//builds a dynamic MySQL query statement from a $_GET array. Array must be sanitized before using this function.
@@ -337,27 +417,6 @@ class API {
 		$results = Database::get_all_results($query);
 		$API_hits = $results['API_hits'];
 		return (intval($API_hits) >= $this->hits_per_day) ? true : false;
-	}
-
-	//need to put call_limit_reached inside of update_API_hits or something.
-	//fails to reset api calls when the call once the call limit has been reached.
-
-	//handles the incrementing of a key's API hits.
-	//returns false if user has maxed out hits for the day
-	public function update_API_hits($API_key, $API_hit_date){
-		//if the api has already been hit today
-		if(date('Ymd') == date('Ymd', strtotime($API_hit_date))){
-			//make sure that the key hasn't hit its limit.
-			//if it has return false
-			if(!$this->call_limit_reached($API_key)){
-				$query = "UPDATE " . Database::$table . " SET API_hits=API_hits+1 WHERE API_key='" . $API_key . "'";
-				Database::execute_sql($query);
-			}else return false;
-		}else{ //if the API has not been hit today set the hits to zero and the hit date to today
-			$now = new DateTime();
-			$query = "UPDATE " . Database::$table . " SET API_hits = 0, API_hit_date='" . $now->format(DateTime::ISO8601) . "' WHERE API_key='" . $API_key . "'";
-			Database::execute_sql($query);
-		}
 	}
 
 //------------------------------------------------------------------------------

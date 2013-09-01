@@ -21,8 +21,9 @@
 	  				description, 
 	  				keywords, 
 	  				copywrite";
-	  				
+
 	  	$api->setup($columns);
+	  	$api->set_default_order_by("timestamp");
 	  	$api->set_searchable("url, description, keywords");
 	  	$api->set_pretty_print(true);
 	 	$json_obj = new StdClass();
