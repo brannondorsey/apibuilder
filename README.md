@@ -1,6 +1,9 @@
 #PHP API Builder
 Easily transform MySQL tables into web accessible json APIs with this mini library for PHP.
 
+[Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [API Parameter Reference](#api-parameter-reference)
+
+
 ##Getting Started
 This PHP API Builder is used to build simple [REST APIs](http://en.wikipedia.org/wiki/Representational_state_transfer) from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access and update data on the web through an easy-to-setup `api.php` page. Using the API parameters provided in this mini lib users can query a database through that `api.php` page using http `GET` parameters and return the results as an array of `JSON` results. A full list of available API parameters is located [below](#api-parameter-reference). 
 
@@ -64,8 +67,35 @@ Use the `api_template.php` to create your own api.
 
 ##Customizing your API
 
+The API Builder mini lib features many more complex API setups than the one demonstrated in the `api_template.php` file. Some of these features include:
 
-##Using your API
+- Making an API Private so that only you can access the data it provides
+- Using API keys to track and limit hits-per-day usage to specific users
+- And setting API defaults for number of results returned per request, default order to return results, etc…
+
+All `$API` setup methods (excluding the constructor) begin with the word `set`. A full list of these setup methods and a brief description can be viewed below. For more information about each method view the [`class.API.inc.php`](includes/class.API.inc.php) source.
+
+###API Class Setup Methods
+
+Names in __bold__ denote methods that are required to use when building an API. All other methods are optional.
+
+- __`API::__construct($host, $db, $table, $username, $password)`__ Instantiates the API object and creates MySQLi database connection.
+- __`API::setup($columns)`__ tells the API object which column values to use when outputting results objects. The `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
+- __`API::set_default_order($column)`__ sets the default column for the api to order results by if no 'order_by' parameter is specified in the request.
+- `API::set_default_flow($flow)` sets the default [flow](COME BACK) if none is specified in the request.
+- `API::set_defualt_output_number($default_output)` sets the number of JSON result objects each API request will output if no 'limit' parameter is included in the request.
+- `API::set_max_output_number(int $max_output)` Sets the max number of JSON result objects allowed per request.
+- `API::set_pretty_print($boolean)` sets the default JSON output as human readable formatted
+- `API::set_searchable($columns)` Enables the [API 'search' parameter](COME BACK) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
+- __`API::set_default_search_order($column)`__ sets the default columns for the API to order API 'search' parameter results by if the MySQL FULLTEXT Match...Against… statement is executed in boolean mode (required __only__ if `API::set_searchable()` has enabled columns to be searched).
+- `API::set_key_required($boolean)` makes your API require a unique key for each request. For more information on limiting and tracking API users visit the [Protecting your API](#protecting-your-api) section of this documentation.
+- `API::set_hit_limit($number_hits_per_day)` sets the number of API hits per API key per day.
+- `API::set_private($private_key)` makes the API private (i.e. only you can use it). For more information on this method visit the [Protecting your API](#protecting-your-api) section of this documentation.
+- `API::set_no_results_message($message)` sets the error message when no results are found in a request
+
+###Protecting your API
+
+##Making Requests
 
 Using your API is easy once you learn how it works. 
 
@@ -74,9 +104,9 @@ Using your API is easy once you learn how it works.
 The API Builder queries [MySQL](https://en.wikipedia.org/wiki/MySQL) Databases and so the http requests used to return data is very similar to forming a MySQL `SELECT` query statement. If you have used MySQL before, think of using the api URL parameters as little pieces of a query. For instance, the `limit`, `order_by`, and `flow` (my nickname for MySQL `ORDER BY`'s `DESC` or `ASC`) parameters translate directly into a MySQL statement on your server.
 
 ####<a id="example-request"></a>Example Request
-     http://fakeorganization.com/api.php?search=thompson&order_by=id&limit=50
+     http://fakeorganization.com/api.php?search=Thompson&order_by=id&limit=50
      
-The above request would return the 50 newest users who have thompson included somewhere in their first_name, last_name, email, city, state or bio columns.
+The above request would return the 50 newest users who have Thompson included somewhere in their first_name, last_name, email, city, state or bio columns.
 
 ####Notable Parameters
 
@@ -190,7 +220,34 @@ if(isset($jsonObj->error)){
 
 This section documents in detail all of the API Builder URL parameters currently available to use when making an http request to your API.
 
-It uses a made up table with a setup that is specifed [earlier in this documentation](COME BACK). 
+It uses a made up table with a setup that is specifed [earlier in this documentation](#example).
+
+###API Key Parameter
+
+If the API has been setup to require a unique key it will need to be included with each request. If the API was set up in this fashion you will not be able to access the API's data unless you have been provided with a valid key. API Builder APIs have this function disabled by default but can be enabled by the API owner with the `API::set_key_required()` method.
+
+Parameter __key:__ `key`
+
+Parameter __value:__ unique 40 character `sha1` key
+
+__Example__: 
+
+     http://fakeorganization.com/api.php?last_name=Renolds&key=8a98253d8b01d4cf8c3fe183ef0862fa69a67b2e
+     
+__Note:__ Failing to include a valid API key or making more than the allowed requests in a day will throw an `error` object in place of a `data` object.
+
+###Private Key Parameter
+
+Similar to the API Key Parameter the Private Key Parameter limits access to the API. Unlike the API Key however there is only one Private Key allowed per API. This parameter is used if the API is intended to be private (i.e. for only one user, not just limited access as with the API Key Parameter). This function is disabled by default but can be enabled by the API owner with `API::set_private()`.
+
+Parameter __key:__ `key`
+
+Parameter __value:__ unique 40 character `sha1` key
+
+__Example__: 
+
+    http://fakeorganization.com/api.php?last_name=Renolds&private_key=ac3c1017b45b299dbf99ce8470c56b063e24f935
+
 
 ###Column Parameters
 Column parameters allow you to query data for a specific value where the parameter key is specified to be the column in your database. Column parameters can be stacked for more specific queries.
@@ -222,36 +279,6 @@ __Example:__
 __Notes:__ `search` results are automatically ordered by relevancy, or if relevancy is found to be arbitrary, by `timestamp`. The `order_by` parameter cannot be used when the `search` parameter is specified. More on why below…
 
 Default Match()…Against()… MySQL statements search databases using a 50% similarity threshold. This means that if a searched string appears in more than half of the rows in the database the search will ignore it. Because it is possible that webpages will have similar tags, I have built the api to automatically re-search `IN BOOLEAN MODE` if no results are found in the first try. If results are found in the second search they are ordered by `timestamp`.
-
-###Exact Parameter
-
-The exact parameter is used in conjunction with the column parameters and specifies whether or not their values are queried with relative or exact accuracy. If not included in the URL request the `exact` parameter defaults to `false`.
-
-Parameter __key:__ `exact`
-
-Parameter __values:__ `TRUE	` and `FALSE`
-
-__Example:__
-
-	http://fakeorganization.com/api.php?id=10&exact=TRUE
-
-This request will limit the returned results to the users whose id is __exactly__ 10. If the `exact` parameter was not specified, or was set to `FALSE`, the same request could also return users whose id's have 10 in them (i.e. 1310, 10488, 100 etc…). including `exact=true` parameter in an api http request is equivalent to a `MySQL` `LIKE` statement.
-	
-__Notes:__ `exact`'s values are case insensitive.
-
-###Exclude Parameter
-
-The exclude parameter is used in conjunction with the column parameters to exclude one or more specific webpage's from a query.
-
-Parameter __key:__ `exclude`
-
-Parameter __values:__ a comma-delimited list of excluded users `id`'s
-
-__Example:__
-
-	http://fakeorganization.com/api.php?email=@gmail.com&exclude=5,137,1489&limit=50
-
-This example will return 50 users other than numbers `5`, `137`, and `1489` who use gmail ordered by last name. 
 
 ###Order By Parameter
 
@@ -313,6 +340,36 @@ For instance, in the unlikely example that all users had "programming" in their 
 
 __Note:__ The MySQL `OFFSET` is calculated server side by multiplying the value of `limit` by the value of `page` minus one. 
 
+###Exact Parameter
+
+The exact parameter is used in conjunction with the column parameters and specifies whether or not their values are queried with relative or exact accuracy. If not included in the URL request the `exact` parameter defaults to `false`.
+
+Parameter __key:__ `exact`
+
+Parameter __values:__ `TRUE	` and `FALSE`
+
+__Example:__
+
+	http://fakeorganization.com/api.php?id=10&exact=TRUE
+
+This request will limit the returned results to the users whose id is __exactly__ 10. If the `exact` parameter was not specified, or was set to `FALSE`, the same request could also return users whose id's have 10 in them (i.e. 1310, 10488, 100 etc…). including `exact=true` parameter in an api http request is equivalent to a `MySQL` `LIKE` statement.
+	
+__Notes:__ `exact`'s values are case insensitive.
+
+###Exclude Parameter
+
+The exclude parameter is used in conjunction with the column parameters to exclude one or more specific webpage's from a query.
+
+Parameter __key:__ `exclude`
+
+Parameter __values:__ a comma-delimited list of excluded users `id`'s
+
+__Example:__
+
+	http://fakeorganization.com/api.php?email=@gmail.com&exclude=5,137,1489&limit=50
+
+This example will return 50 users other than numbers `5`, `137`, and `1489` who use gmail ordered by last name. 
+
 ###Count Only Parameter
 
 The `count only` parameter differs from all of the other API Builder parameters as it __does not__ return an array of result objects. Instead, it returns a single object as the first element in the `data` array. This object has only one property, `count`, where the corresponding `string` value describes the number of results returned by the rest of the url parameters. If the `count_only` parameter is not specified the default value is `FALSE`. When `count_only` is set to `TRUE` the request will __only__ evaluate and return the number of results found by the rest of the url parameters and the request __will not__ return any user data.
@@ -338,6 +395,19 @@ This request returns the number of users that have the first name "Thomas". The 
 
 __Note:__ The value of `count_only` is case insensitive.
 
+###Pretty Print Parameter
+
+The Pretty Print Parameter returns a response with indentations and line breaks. If Pretty Print is set to `TRUE` the results returned by the server will be human readable (pretty printed). With most API setups Pretty Print will be enabled by default but the API owner may have this feature disabled. Either way Pretty Print can be turned on or off with this parameter. 
+
+Parameter __key:__ `pretty_print`
+
+Parameter __value:__ `TRUE` or `FALSE`
+
+__Example:__
+
+	http://fakeorganization.com/api.php?email=@gmail.com&pretty_print=false
+	
+__Note:__ The value of `count_only` is case insensitive. If large amounts of data are being transfered and human readibility is unimportant it is suggested to disable pretty print so as to enable faster API requests and data parsing.
 
 ##License and Credit
 

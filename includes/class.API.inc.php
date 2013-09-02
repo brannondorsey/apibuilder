@@ -66,19 +66,23 @@ class API {
 	}
 
 	/**
-	 * Set the default column for the api to order results by if no 'order_by' parameter is specified in the request 
+	 * Set the default column for the API to order results by if no 'order_by' parameter is specified in the request 
 	 * @param string $column Name of the column for default order by
 	 */
 	public function set_default_order($column){
 		$this->default_order_by = (string) $column;
 	}
 
+	/**
+	 * Set the default columns for the API to order URL `search` parameter results by if the MySQL FULLTEXT Match...Against statement is executed in boolean mode 
+	 * @param string $column
+	 */
 	public function set_default_search_order($column){
 		$this->default_search_order_by = (string) $column;
 	}
 
 	/**
-	 * Makes the API private
+	 * Makes the API private so that only users with the SHA1 passed as the $private_key variable can access the API's data by specifying the same SHA1 as a private_key URL parameter in the http request
 	 * Takes the SHA1 private key to authorize each request as parameter 
 	 * @param string $private_key 40 character SHA1
 	 */
@@ -119,7 +123,7 @@ class API {
 
 	/**
 	 * Sets the max output results allowed per request
-	 * Sets the max number of JSON result objects each API request will output
+	 * Sets the max number of JSON result objects each API request is allowed output
 	 * @param int $max_output
 	 * @return void
 	 */
@@ -128,8 +132,7 @@ class API {
 	}
 
 	/**
-	 * Sets the max output results allowed per request
-	 * Sets the max number of JSON result objects each API request will output
+	 * Sets the default JSON output as human readable formatted
 	 * @param boolean $boolean
 	 * @return void
 	 */
@@ -153,7 +156,7 @@ class API {
 	}
 
 	/**
-	 * Enables the api 'search' parameter and specifies which columns can be searched
+	 * Enables the API 'search' parameter and specifies which columns can be searched
 	 * Note: $columns must be Fulltext enabled in your database's table structure
 	 * @param string $columns Comma-delimited list of column names 
 	 */
@@ -163,7 +166,7 @@ class API {
 	}
 
 	/**
-	 * Sets the error value when no results are found in a request
+	 * Sets the error com_message_pump() when no results are found in a request
 	 * Note: It is recommended to use a lower case $message string per this API class error standard
 	 * @param string $message The error value to use when no results are found
 	 */
