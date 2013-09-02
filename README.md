@@ -79,7 +79,7 @@ All `$API` setup methods (excluding the constructor) begin with the word `set`. 
 
 Names in __bold__ denote methods that are required to use when building an API. All other methods are optional.
 
-- __`API::__construct($host, $db, $table, $username, $password)`__ Instantiates the API object and creates MySQLi database connection.
+- **`API::__construct($host, $db, $table, $username, $password)`** Instantiates the API object and creates MySQLi database connection.
 - __`API::setup($columns)`__ tells the API object which column values to use when outputting results objects. The `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
 - __`API::set_default_order($column)`__ sets the default column for the api to order results by if no 'order_by' parameter is specified in the request.
 - `API::set_default_flow($flow)` sets the default [flow](COME BACK) if none is specified in the request.
