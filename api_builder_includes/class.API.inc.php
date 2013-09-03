@@ -296,7 +296,7 @@ class API {
 	protected function find_config_errors(){
 		if(!isset($this->default_order_by)) $this->config_errors[] = "a default order must be specified using API::set_default_order()";
 		if(!isset($this->default_search_order_by) && $this->search_allowed){
-			$this->config_errors[] = "a default search order must be specified using API::set_default_search_order() if search is enable with API::set_searchable()";
+			$this->config_errors[] = "a default search order must be specified using API::set_default_search_order() if search is enabled with API::set_searchable()";
 		}
 		if(!isset($this->columns_to_provide)) $this->config_errors[] = "output columns must be specified using API::setup()";
 		if(!empty($this->config_errors)){ 

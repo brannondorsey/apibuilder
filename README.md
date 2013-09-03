@@ -1,5 +1,5 @@
 #PHP API Builder
-Easily transform MySQL tables into web accessible json APIs with this mini library for PHP.
+Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [API Parameter Reference](#api-parameter-reference)
 
@@ -9,13 +9,13 @@ This PHP API Builder is used to build simple [REST APIs](http://en.wikipedia.org
 
 ###How it works
 
-Setting up the API is easy! To add an API to an existing MySQL table simply place this repository's `include/` folder and `api.php` file in the directory where you want your api page to be located (If you want your api accessible at yourdomain.com/api.php you should put these files in your root directory). Next update the `api_template.php` file to reflect your database info and [API customization](#customizing-your-api). Then save the updated file as `api.php` or whatever you want your API page to be called.
+Setting up the API is easy! To add an API to an existing MySQL table simply place this repository's `api_builder_include/` folder and `api_template.php` file in the directory where you want your api page to be located (If you want your api accessible at yourdomain.com/api.php you should put these files in your root directory). Next update the `api_template.php` file to reflect your database info and [API customization](#customizing-your-api). Then save the updated file as `api.php` or whatever you want your API page to be called.
 
 Thats it! You can now access your MySQL database using the [API Builder URL Parameters](#api-parameter-reference) Below is an basic example of how the `$api` object can be setup. For more info and options check out the [API Builder documentation](COME BACK).
 
 ###Download
 
-You can direct download a .zip of API Builder by clicking [here](COME BACK).
+You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip).
 
 ###Example
 

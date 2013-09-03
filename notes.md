@@ -9,6 +9,7 @@
 - Make PHPDocumenter documentation (if I am feelin jivey)
 - figure out whats up with why `API::check_API_key()` auto returns true.
 - Check if Exclude parameter will screw things up if id is not used as an output column.
+- Remove api.php and test_api.php before releasing project
 
 ##Completed
 

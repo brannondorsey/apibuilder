@@ -1,7 +1,7 @@
 <?php
 
 	 //include the API Builder mini lib
-	 require_once("includes/class.API.inc.php");
+	 require_once("api_builder_includes/class.API.inc.php");
 
 	 //set page to output JSON
 	 header("Content-Type: text/javascript; charset=utf-8");
