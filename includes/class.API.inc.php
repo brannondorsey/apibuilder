@@ -143,13 +143,15 @@ class API {
 	/**
 	 * Makes API require a unique key for each request.
 	 * @param  boolean $boolean
+	 * @param  string $users_table_name Optional parameter that defines the name of the table in the database to be used to store information about the users making the requests. If none is specified "users" will be used.
 	 * @param  string $key_column_name Optional parameter that defines the name of the column in the database to be used for the API key. If none is specified "API_key" will be used.
 	 * @param  string $hit_count_column_name Optional parameter that defines the name of the column in the database to be used for the API hit count. If none is specified "API_hits" will be used.
 	 * @param  string $hit_date_column_name Optional parameter that defines the name of the column in the database to be used for the API hit date. If none is specified "API_hit_date" will be used.
 	 * @return void
 	 */
-	public function set_key_required($boolean, $key_column_name=false, $hit_count_column_name=false, $hit_date_column_name=false){
+	public function set_key_required($boolean, $users_table_name=false, $key_column_name=false, $hit_count_column_name=false, $hit_date_column_name=false){
 		$this->API_key_required = (boolean) $boolean;
+		if($users_table_name) Database::$users_table = (string) $users_table_name;
 		if($key_column_name) $this->API_key_column_name = $key_column_name;
 		if($hit_count_column_name) $this->API_hit_count_column_name = $hit_count_column_name;
 		if($hit_date_column_name) $this->API_hit_date_column_name = $hit_date_column_name;
@@ -232,10 +234,10 @@ class API {
 
 					//only attempt to increment the api hit count if this method is called from a PUBLIC API request
 					if($this->API_key_required){
-						$query = "SELECT API_hit_date FROM " . Database::$table . " WHERE " . $this->API_key_column_name . " = '" . $this->API_key . "' LIMIT 1";
+						$query = "SELECT " . $this->API_hit_date_column_name . " FROM " . Database::$users_table . " WHERE " . $this->API_key_column_name . " = '" . $this->API_key . "' LIMIT 1";
 						$result = Database::get_all_results($query);
 						//increments the hit count and/or hit date OR sets the error message if the key has reached its hit limit for the day
-						if($this->update_API_hits($this->API_key, $result[0]['API_hit_date']) === false){
+						if($this->update_API_hits($this->API_key, $result[0][$this->API_hit_date_column_name]) === false){
 						 $json_obj->error = "API hit limit reached";
 				   		}
 					 }
@@ -277,12 +279,12 @@ class API {
 			//make sure that the key hasn't hit its limit.
 			//if it has return false
 			if(!$this->call_limit_reached($API_key)){
-				$query = "UPDATE " . Database::$table . " SET " . $this->API_hit_count_column_name . "=" . $this->API_hit_count_column_name . "+1 WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
+				$query = "UPDATE " . Database::$users_table . " SET " . $this->API_hit_count_column_name . "=" . $this->API_hit_count_column_name . "+1 WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
 				Database::execute_sql($query);
 			}else return false;
 		}else{ //if the API has not been hit today set the hits to zero and the hit date to today
 			$now = new DateTime();
-			$query = "UPDATE " . Database::$table . " SET " . $this->API_hit_count_column_name . " = 0, " . $this->API_hit_date_column_name . "='" . $now->format(DateTime::ISO8601) . "' WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
+			$query = "UPDATE " . Database::$users_table . " SET " . $this->API_hit_count_column_name . " = 0, " . $this->API_hit_date_column_name . "='" . $now->format(DateTime::ISO8601) . "' WHERE " . $this->API_key_column_name . "='" . $API_key . "'";
 			Database::execute_sql($query);
 		}
 	}

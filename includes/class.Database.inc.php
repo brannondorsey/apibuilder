@@ -9,6 +9,7 @@ class Database {
 	protected static $host;
 	protected static $db;
 	public static $table;
+	public static $users_table;
 	protected static $user;
 	protected static $password;
 

@@ -95,6 +95,87 @@ Names in __bold__ denote methods that are required to use when building an API. 
 
 ###Protecting your API
 
+There are two ways of limiting access to your API using the setup methods. The first, and most private, is by setting up your API so that only you (and people who you give your private key to) can access it. The second is to track and limit API usage using API keys that are distributed to your users.
+
+####Making your API Private
+
+To make your API private include the following in when setting up your `api.php` page where `$private_key` is a unique 40 character SHA1: 
+
+```php
+$private_key = "4e13b0c28e17087366ac4d67801ae0835bf9e9a1";
+$api->set_private($private_key);
+```
+
+Then when you make your http request to your API just prepend your key to the request using the [API Private Key Parameter](#private-key-parameter):
+
+`http://fakeorganization.com/api.php?last_name=Renolds&private_key=4e13b0c28e17087366ac4d67801ae0835bf9e9a1`
+
+Viola… your own private API.
+
+####Limiting and Tracking Usage with API Keys
+
+Often API owners supply users with unique API keys to track and limit requests so as not to bog down servers. This is a common practice with the Google, Twitter, and Facebook APIs. The API Builder allows API owners to easily do the same!
+
+#####Database Setup
+
+Because this process requires each user to have their own unique API key to access the API, a new table needs to be made to store information about the users that will be making the requests. This table should be named "users" and should include at least the following columns: "id", "API_key", "API_hits", and "API_hit_date". These table and column names must be exact unless specified otherwise using `API::set_key_required()` optional parameters (see [API setup](#api-setup) below). This SQL database structure can be imported from [this file](COME BACK).
+
+Alternatively, it is often the case that APIs actually supply data regarding users in the first place. For instance, the Twitter and Facebook APIs deliver data about users! If your API is delivering data from a users table already, and you would like to grant __only__ those users access to your API, you may simply add the "id", "API_key", "API_hits", and "API_hit_date" columns to your existing users table instead of creating a new one.
+
+#####API Setup
+
+Once the new table has been created in your database (or your original table was saving users it was amended to include the required columns) you are ready to setup you API to track and limit user's hits. If you used the default table name "users" and the column names "id", "API_key", "API_hits", and "API_hit_date" then the API setup is easy:
+
+```php
+$api->set_key_required(true);
+```
+
+If you chose to change the names of any table or andy of the columns then these changes must be specified using `API::set_key_required()`'s optional parameters:
+
+`API::set_key_required($boolean, $users_table_name=false, $key_column_name=false, $hit_count_column_name=false, $hit_date_column_name=false);`
+
+If for instance, you chose not to add a new "users" table to your database because the table used for the API, "fakeorganization_users", is already storing users who you want to give access to the API (like in the case of Twitter or Facebook) the setup would look like this.
+
+```php
+$api->set_key_required(true, "fakeorganizations_users");
+```
+
+If you also changed the "API_hits" column name to something like "number_of_hits_today" then your API key setup would be:
+
+```php
+$api->set_key_required(true, "fakeorganizations_users", false, "number_of_hits_today");
+```
+
+__Note:__ Don't forget to specify the unchanged table or column names as `false` to maintain parameter order!
+
+For simplicity is recommended to download and import the "users" table structure without modifying the column names.
+
+All that is required now is for you to fill the "users" table's "API_key"s with 40 character SHA1 and distribute them to your real life users so that they can use your API.
+
+#####Usage and Errors
+
+Once your API has been set to require a key (`API::set_key_required()`) only users who make http requests that contain a valid [API Key Parameter](#api-key-parameter) will be given API results. 
+
+```php
+http://fakeorganization.com/api.php?last_name=Renolds&key=1278cf264faca856baf2268e52e2761a75972ec7
+```
+
+In the above example the "users" table must include a user row where the value of the "API_key" (or your API's equivalent column) is "1278cf264faca856baf2268e52e2761a75972ec7". In the event that this is not the case, an invalid key is provided, or no key is provided, the following `error` property is returned in the response JSON instead of a `data` array:
+
+```json
+{
+    "error": "API key is invalid or was not provided"
+}
+```
+
+In the event that a user has maxed out their API hits for the day (set using `API::set_hit_limit()`) the API would return the following:
+
+```json
+{
+    "error": "API hit limit reached"
+}
+```
+
 ##Making Requests
 
 Using your API is easy once you learn how it works. 
