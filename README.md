@@ -58,7 +58,7 @@ This example table, named `users`, holds information about imaginary users that 
 	 	$get_array = Database::clean($_GET);
 
 	 	//output the results of the http request
-	 	echo $api->get_JSON_from_GET($get_array);
+	 	echo $api->get_json_from_assoc($get_array);
 	}
 ?>
 ```
@@ -82,11 +82,11 @@ Names in __bold__ denote methods that are required to use when building an API. 
 - **`API::__construct($host, $database, $table, $username, $password)`** Instantiates the API object and creates a MySQLi database connection.
 -  **`API::setup($columns)`** tells the API object which column values to use when outputting results objects. The `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
 - **`API::set_default_order($column)`** sets the default column for the api to order results by if no 'order_by' parameter is specified in the request.
-- `API::set_default_flow($flow)` sets the default [flow](COME BACK) if none is specified in the request.
+- `API::set_default_flow($flow)` sets the default [flow](#flow-parameter) if none is specified in the request.
 - `API::set_defualt_output_number($default_output)` sets the number of JSON result objects each API request will output if no 'limit' parameter is included in the request.
 - `API::set_max_output_number(int $max_output)` sets the max number of JSON result objects allowed per request.
 - `API::set_pretty_print($boolean)` sets the default JSON output as human readable formatted
-- `API::set_searchable($columns)` enables the [API 'search' parameter](COME BACK) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
+- `API::set_searchable($columns)` enables the [API 'search' parameter](#search-parameter) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
 - **`API::set_default_search_order($column)`** sets the default columns for the API to order API 'search' parameter results by if the MySQL FULLTEXT Match()…Against()… statement is executed in boolean mode (required __only__ if `API::set_searchable()` has enabled columns to be searched).
 - `API::set_key_required($boolean)` makes your API require a unique key for each request. For more information on limiting and tracking API users visit the [Protecting your API](#protecting-your-api) section of this documentation.
 - `API::set_hit_limit($number_hits_per_day)` sets the number of API hits per API key per day.

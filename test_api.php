@@ -33,6 +33,6 @@
 	 	$get_array = Database::clean($_GET);
 
 	 	//output the results of the http request
-	 	echo $api->get_JSON_from_GET($get_array);
+	 	echo $api->get_json_from_assoc($get_array);
 	}
 ?>

@@ -185,7 +185,7 @@ class API {
 	 * @param  array $get_array An assosciative array of API parameter names as keys 
 	 * @return string A JSON string representing the request's results
 	 */
-	public function get_JSON_from_GET(&$get_array){
+	public function get_json_from_assoc(&$get_array){
 
 		$json_obj = new StdClass();
 		$pretty_print = false;
@@ -250,8 +250,8 @@ class API {
 					strstr($json_obj->error, $this->no_results_message) == true){
 						$this->search_in_boolean_mode = true; //set search in boolean mode to true
 						$this->search_has_been_repeated = true; //note that the search will now have been repeated
-					 	//$this->JSON_string = $this->get_JSON_from_GET($get_array, $object_parent_name); //recurse the function (thus re-searching)
-					 	return $this->get_JSON_from_GET($get_array); //recurse the function (thus re-searching)
+					 	//$this->JSON_string = $this->get_json_from_assoc($get_array, $object_parent_name); //recurse the function (thus re-searching)
+					 	return $this->get_json_from_assoc($get_array); //recurse the function (thus re-searching)
 				}
 			}else{ //API is private but private_key is invalid or was not provided
 				$json_obj->error = "this API is private and the private key was invalid or not provided";
