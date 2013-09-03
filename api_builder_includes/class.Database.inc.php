@@ -9,7 +9,7 @@ class Database {
 	protected static $host;
 	protected static $db;
 	public static $table;
-	public static $users_table;
+	public static $users_table = "users";
 	protected static $user;
 	protected static $password;
 
@@ -86,8 +86,7 @@ class Database {
 				return $result_to_return;
 			} 
 			else return false; //there were no results found
-		}
-		else echo " MYSQL QUERY FAILED";
+		}else echo " MYSQL QUERY FAILED";
 	}
 
 	//returns string or assosciative array of strings

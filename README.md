@@ -1,11 +1,11 @@
 #PHP API Builder
-Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
+Easily transform MySQL tables into web accessible REST APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [API Parameter Reference](#api-parameter-reference)
 
 
 ##Getting Started
-This PHP API Builder is used to build simple [REST APIs](http://en.wikipedia.org/wiki/Representational_state_transfer) from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access and update data on the web through an easy-to-setup `api.php` page. Using the API parameters provided in this mini lib users can query a database through that `api.php` page using http `GET` parameters and return the results as an array of `JSON` results. A full list of available API parameters is located [below](#api-parameter-reference). 
+This PHP API Builder is used to build simple JSON [REST APIs](http://en.wikipedia.org/wiki/Representational_state_transfer) from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access and update data on the web through an easy-to-setup `api.php` page. Using the API parameters provided in this mini lib users can query a database through that `api.php` page using http `GET` parameters and return the results as an array of `JSON` results. A full list of available API parameters is located [below](#api-parameter-reference). 
 
 ###How it works
 
@@ -118,7 +118,7 @@ Often API owners supply users with unique API keys to track and limit requests s
 
 #####Database Setup
 
-Because this process requires each user to have their own unique API key to access the API, a new table needs to be made to store information about the users that will be making the requests. This table should be named "users" and should include at least the following columns: "id", "API_key", "API_hits", and "API_hit_date". These table and column names must be exact unless specified otherwise using `API::set_key_required()` optional parameters (see [API setup](#api-setup) below). This SQL database structure can be imported from [this file](COME BACK).
+Because this process requires each user to have their own unique API key to access the API, a new table needs to be made to store information about the users that will be making the requests. This table should be named "users" and should include at least the following columns: "id", "API_key", "API_hits", and "API_hit_date". These table and column names must be exact unless specified otherwise using `API::set_key_required()` optional parameters (see [API setup](#api-setup) below). This SQL database structure can be imported from the [`users_table.sql`](users_table.sql) file.
 
 Alternatively, it is often the case that APIs actually supply data regarding users in the first place. For instance, the Twitter and Facebook APIs deliver data about users! If your API is delivering data from a users table already, and you would like to grant __only__ those users access to your API, you may simply add the "id", "API_key", "API_hits", and "API_hit_date" columns to your existing users table instead of creating a new one.
 

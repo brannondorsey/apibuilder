@@ -204,7 +204,8 @@ class API {
 				$this->private_key == $get_array['private_key']){
 
 				$query = $this->form_query($get_array);
-				if($this->check_API_key()){
+				if($this->check_API_key()
+					|| !$this->API_key_required){
 					//if search was included as a parameter in the http request but it isn't allowed in the api's config...
 					if(isset($get_array['search']) &&
 					   !$this->search_allowed){
@@ -241,8 +242,7 @@ class API {
 						 $json_obj->error = "API hit limit reached";
 				   		}
 					 }
-				}
-				else $json_obj->error = "API key is invalid or was not provided";
+				}else $json_obj->error = "API key is invalid or was not provided";
 				//if there was a search and it returned no results
 				if($this->search != "" &&
 					!$this->search_has_been_repeated &&
@@ -432,9 +432,10 @@ class API {
 	}
 
 	protected function check_API_key(){
-		return true; //bypass API key
-		$API_key_query = "SELECT id FROM " . Database::$table . " WHERE API_key='" . $this->API_key ."' LIMIT 1";
+		//return true; //bypass API key
+		$API_key_query = "SELECT id FROM " . Database::$users_table . " WHERE " . $this->API_key_column_name . "='" . $this->API_key ."' LIMIT 1";
 		//if the key was provided and it is the right length test it
+
 		if($this->API_key != "" &&
 			strlen($this->API_key) == 40){
 			$results = Database::get_all_results($API_key_query);
@@ -451,9 +452,9 @@ class API {
 
 	//boolean that determines if API call limit has been reached
 	protected function call_limit_reached($API_key){
-		$query = "SELECT API_hits FROM " . Database::$table . " WHERE API_key='" . $API_key . "' LIMIT 1";
+		$query = "SELECT " . $this->API_hit_count_column_name . " FROM " . Database::$users_table . " WHERE " . $this->API_key_column_name . "='" . $API_key . "' LIMIT 1";
 		$results = Database::get_all_results($query);
-		$API_hits = $results['API_hits'];
+		$API_hits = $results[0][$this->API_hit_count_column_name];
 		return (intval($API_hits) >= $this->hits_per_day) ? true : false;
 	}
 

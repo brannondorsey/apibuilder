@@ -10,6 +10,7 @@
 - figure out whats up with why `API::check_API_key()` auto returns true.
 - Check if Exclude parameter will screw things up if id is not used as an output column.
 - Remove api.php and test_api.php before releasing project
+- Error handling for if search is performed on a column that is not indexed
 
 ##Completed
 
