@@ -1,11 +1,11 @@
 #PHP API Builder
-Easily transform MySQL tables into web accessible REST APIs with this mini library for PHP.
+Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [API Parameter Reference](#api-parameter-reference)
 
 
 ##Getting Started
-This PHP API Builder is used to build simple JSON [REST APIs](http://en.wikipedia.org/wiki/Representational_state_transfer) from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as an array of `JSON` results. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
+This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as an array of `JSON` results. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
 
 ###How it works
 

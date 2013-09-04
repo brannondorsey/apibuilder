@@ -31,6 +31,10 @@ class API {
 	//default pretty print property
 	protected $pretty_print = true;
 
+	//default exclude properties
+	protected $exclude_allowed = false;
+	protected $exclude_column = "id";
+
 	//default no results message
 	protected $no_results_message = "no results found";
 
@@ -160,6 +164,11 @@ class API {
 		if($hit_date_column_name) $this->API_hit_date_column_name = $hit_date_column_name;
 	}
 
+	public function set_exclude_allowed($boolean, $column_name=false){
+		$this->exclude_allowed = (boolean) $boolean;
+		if($column_name) $this->exclude_column = $column_name;
+	}
+
 	/**
 	 * Enables the API 'search' parameter and specifies which columns can be searched
 	 * Note: $columns must be Fulltext enabled in your database's table structure
@@ -270,6 +279,10 @@ class API {
 					if(isset($get_array['search']) &&
 					   !$this->search_allowed){
 						$json_obj->error = "search parameter not enabled for this API";
+					}
+					else if(isset($get_array['exclude']) &&
+						!$this->exclude_allowed){
+						$json_obj->error = "exclude parameter not enabled for this API";
 					}else{
 						if($results_array = Database::get_all_results($query)){
 
@@ -396,7 +409,7 @@ class API {
 				    $value == true){
 				$count_only = true;
 			}
-			else if($parameter == 'exclude') $exclude = explode(",", $value);
+			else if($parameter == 'exclude' && $this->exclude_allowed) $exclude = explode(",", $value);
 			else if($parameter == 'key') $this->API_key = $value; 
 		}
 
@@ -436,9 +449,9 @@ class API {
 				}
 				//if there was an exclude parameter exclude each comma seperated value
 				//exclude cannot be used in a FULLTEXT search as of now
-				if(!empty($exclude)){
+				if(!empty($exclude) && $this->exclude_allowed){
 					foreach($exclude as $excluded_id)
-					$query .= "AND id !='" . $excluded_id . "' ";
+					$query .= "AND " . $this->exclude_column . " !='" . $excluded_id . "' ";
 
 				}
 			}

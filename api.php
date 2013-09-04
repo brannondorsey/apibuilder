@@ -31,6 +31,7 @@
 	  	$api->set_default_order("timestamp");
 	  	$api->set_searchable("url, description, keywords");
 	  	$api->set_default_search_order("timestamp");
+	  	$api->set_exclude_allowed(true);
 	  	$api->set_pretty_print(true);
 
 	  	//sanitize the contents of $_GET to insure that 
