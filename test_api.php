@@ -22,7 +22,7 @@
 	  	//setup the API
 	  	$api = new API("localhost", "fakeorganization", "clients", "root", "root");
 	  	$api->setup($columns);
-	  	$api->set_key_required(true);
+	  	//$api->set_key_required(true);
 	  	$api->set_default_order("last_name");
 	  	$api->set_searchable("bio");
 	  	$api->set_default_search_order("id");

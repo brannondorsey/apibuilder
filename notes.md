@@ -1,9 +1,8 @@
 #API Builder Notes
 
 ##Todo
-
+- Fix `API::set_searchable()` bug
 - Suppress Warnings on api page
-- Make PHPDocumenter documentation (if I am feelin jivey)
 - Check if Exclude parameter will screw things up if id is not used as an output column.
 - Remove api.php and test_api.php before releasing project
 - Error handling for if search is performed on a column that is not indexed
@@ -23,3 +22,4 @@
 - Document all functions with function comments
 - figure out whats up with why `API::check_API_key()` auto returns true.
 - Email Chris about it
+- ~~Make PHPDocumenter documentation (if I am feelin jivey)~~

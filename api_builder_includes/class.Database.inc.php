@@ -6,9 +6,9 @@ class Database {
 	public static $private_key;
 
 	//MySQL database info
-	protected static $host;
-	protected static $db;
+	public static $db;
 	public static $table;
+	protected static $host;	
 	public static $users_table = "users";
 	protected static $user;
 	protected static $password;

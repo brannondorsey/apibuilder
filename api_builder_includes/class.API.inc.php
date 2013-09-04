@@ -4,6 +4,7 @@ require_once("class.Database.inc.php");
 class API {
 
 	public $columns_to_provide;
+	public $columns_to_provide_array;
 
 	//default API access 
 	protected $private = false;
@@ -38,6 +39,7 @@ class API {
 	protected $private_key;
 	protected $API_key;
 	protected $full_text_columns;
+	protected $full_text_columns_array;
 	protected $search = "";
 	protected $config_errors;
 	
@@ -63,6 +65,7 @@ class API {
 	 */
 	public function setup($columns){
 		$this->columns_to_provide = $this->format_comma_delimited($columns);
+		$this->columns_to_provide_array = explode(', ', $this->columns_to_provide);
 	}
 
 	/**
@@ -161,10 +164,67 @@ class API {
 	 * Enables the API 'search' parameter and specifies which columns can be searched
 	 * Note: $columns must be Fulltext enabled in your database's table structure
 	 * @param string $columns Comma-delimited list of column names 
+	 * @return void/boolean
 	 */
 	public function set_searchable($columns){
 		$this->full_text_columns = $this->format_comma_delimited($columns);
-		$this->search_allowed = true;
+		$this->full_text_columns_array = explode(', ', $this->full_text_columns);
+		$columns_correct = true;
+
+		//make sure that all $columns have
+		//1. been setup using API::setup()
+		//2. are FULLTEXT enabled in the db
+		//3. have the TEXT data type in the db
+		
+		//1. check to make sure that each column specified has been specified using API::setup()
+		foreach($this->full_text_columns_array as $full_text_column){
+			//if this column name is NOT a column name specified in setup...
+			if(!$this->is_column_parameter($full_text_column, $this->columns_to_provide_array)){
+				$columns_correct = false;
+				$this->config_errors[] = "the '$full_text_column' column was specified in API::set_searchable() but was not included in the list of columns passed into API::setup()";
+				break;
+			}
+		}
+
+		//2.
+		$query = "SELECT GROUP_CONCAT( DISTINCT column_name SEPARATOR  ', ' ) FROM information_schema.STATISTICS WHERE table_schema = '" . Database::$db . "' AND table_name =  '"
+		 . Database::$table . "' AND index_type =  'FULLTEXT'";
+		
+		//get the column names that are FULLTEXT from the db
+		if($full_text_columns_from_db_array = $this->get_column_names_from_db($query)){
+			//loop through the columns that are specified with the API::set_searchable() $column parameter
+			foreach($this->full_text_columns_array as $column_name){
+				//if one of the columns set with API::set_searchable() is not included in the FULLTEXT schema from the db...
+				if(!in_array($column_name, $full_text_columns_from_db_array)){
+					//run error
+					$columns_correct = false;
+					$this->config_errors[] = "the column '$column_name' is specified in API::set_searchable() but is not indexed as FULLTEXT in your database";
+					break;
+				}
+			}
+		}
+
+		//3.
+		$query = "SHOW COLUMNS FROM " . Database::$table . " FROM " . Database::$db;
+		if($results = Database::get_all_results($query)){
+			$text_columns = array();
+			foreach ($results as $column) {
+				if($column["Type"] == "text") $text_columns[] = $column['Field'];
+			}
+			//same as 2...
+			foreach($this->full_text_columns_array as $column_name){
+				if(!in_array($column_name, $text_columns)){
+					$columns_correct = false;
+					$this->config_errors[] = "the column '$column_name' is specified in API::set_searchable() but it does not have the required data type 'Text' in your database";
+					break;
+				}
+			}
+		}
+		
+		if($columns_correct){
+			$this->search_allowed = true;
+			return true;
+		} else return false;
 	}
 
 	/**
@@ -308,7 +368,6 @@ class API {
 	protected function form_query(&$get_array){
 
 		$column_parameters = array();
-		$columns_to_provide_array = explode(', ', $this->columns_to_provide);
 		$this->search = "";
 		$order_by = "";
 		$flow = "";
@@ -321,7 +380,7 @@ class API {
 
 		//distribute $_GETs to their appropriate arrays/vars
 		foreach($get_array as $parameter => $value){
-			if($this->is_column_parameter($parameter, $columns_to_provide_array)){ 
+			if($this->is_column_parameter($parameter, $this->columns_to_provide_array)){ 
 				$column_parameters[$parameter] = $value;
 			}
 			else if($parameter == 'search' && $this->search_allowed) $this->search = $value;
@@ -346,7 +405,7 @@ class API {
 		else $query = "SELECT " . $this->columns_to_provide;
 		if($this->search != ""){
 			//if the search is not supposed to be in boolean mode remove IN BOOLEAN MODE from $match_against_statment
-			if(!$this->search_in_boolean_mode) $match_against_statement = str_replace("IN BOOLEAN MODE", "", $match_against_statement);
+			if(!$this->search_in_boolean_mode) $match_against_statement = str_replace(" IN BOOLEAN MODE", "", $match_against_statement);
 		 	$query .= ", " . $match_against_statement . "AS score";
 		}
 		$query .= " FROM "  . Database::$table ." ";
@@ -356,7 +415,7 @@ class API {
 			$this->append_prepend($this->search, "'");
 			$query .= "WHERE $match_against_statement ORDER BY ";
 			//order by score if it is the first FULLTEXT (natural mode) search and order by likes if it is the fallback boolean mode search
-			$query .= ( $this->search_has_been_repeated ? "timestamp DESC " : "score DESC ");  
+			$query .= ( $this->search_has_been_repeated ? $this->default_search_order_by . " DESC " : "score DESC ");  
 		}
 		//if search was not specified as a parameter used use LIKE
 		else{
@@ -387,7 +446,7 @@ class API {
 			//add ORDER BY statement
 			$order_by_string;
 			if($order_by != "" &&
-			$this->is_column_parameter($order_by, $columns_to_provide_array)){
+			$this->is_column_parameter($order_by, $this->columns_to_provide_array)){
 				$order_by_string = "ORDER BY $order_by ";
 			}
 			else $order_by_string = "ORDER BY " . $this->default_order_by . " ";
@@ -478,6 +537,17 @@ class API {
 			$string_to_return .= trim($list_item) . ", ";
 		}
 		return rtrim($string_to_return, ", ");
+	}
+
+	//used inside API::set_searchable().
+	//returns a comma-space dilimited list of column names based on query
+	protected function get_column_names_from_db($query){
+		if($result = Database::get_all_results($query)){
+			$result = $result[0]; 
+			$key = current(array_keys($result));
+			//return an array of columns that are FULLTEXT enabled from the database
+			return explode(", ", $result[$key]); 
+		}else return false;
 	}
 
 }
