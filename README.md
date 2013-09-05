@@ -5,7 +5,7 @@ Easily transform MySQL tables into web accessible JSON APIs with this mini libra
 
 
 ##Getting Started
-This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as an array of `JSON` results. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
+This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as an array of JSON results. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
 
 ###How it works
 
@@ -73,7 +73,7 @@ The API Builder mini lib features many more complex API setups than the one demo
 - Using API keys to track and limit hits-per-day usage to specific users
 - And setting API defaults for number of results returned per request, default order to return results, etc…
 
-All `$api` setup methods (excluding the constructor) begin with the word `set`. A full list of these setup methods and a brief description can be viewed below. For more information about each method view the [`class.API.inc.php`](api_builder_includes/class.API.inc.php) source.
+All `API` class setup methods (excluding the constructor) begin with the word `set`. A full list of these setup methods and a brief description can be viewed below. For more information about each method view the [`class.API.inc.php`](api_builder_includes/class.API.inc.php) source.
 
 ###API Class Setup Methods
 
@@ -88,10 +88,13 @@ Names in __bold__ denote methods that are required to use when building an API. 
 - `API::set_pretty_print($boolean)` sets the default JSON output as human readable formatted
 - `API::set_searchable($columns)` enables the [API 'search' parameter](#search-parameter) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
 - **`API::set_default_search_order($column)`** sets the default columns for the API to order API 'search' parameter results by if the MySQL FULLTEXT Match()…Against()… statement is executed in boolean mode (required __only__ if `API::set_searchable()` has enabled columns to be searched).
+- `API::set_exclude_allowed($boolean)` enables the [API 'exclude' parameter]. This method's parameter can only be `TRUE` if your database's table includes an 'id' column (or whatever unique column name is included as this method's optional parameter).
 - `API::set_key_required($boolean)` makes your API require a unique key for each request. For more information on limiting and tracking API users visit the [Protecting your API](#protecting-your-api) section of this documentation.
 - `API::set_hit_limit($number_hits_per_day)` sets the number of API hits per API key per day.
 - `API::set_private($private_key)` makes the API private (i.e. only you can use it). For more information on this method visit the [Protecting your API](#protecting-your-api) section of this documentation.
 - `API::set_no_results_message($message)` sets the error message when no results are found in a request.
+
+If the API setup is configured incorrectly the `api.php`'s resulting JSON response object will contain a `config_error` array of messages describing the errors instead of a `data` property.
 
 ###Protecting your API
 
@@ -437,7 +440,7 @@ __Notes:__ `exact`'s values are case insensitive.
 
 ###Exclude Parameter
 
-The exclude parameter is used in conjunction with the column parameters to exclude one or more specific result row from a query.
+The exclude parameter is used in conjunction with the column parameters to exclude one or more specific result row from a query. It is disabled by default but may be enabled by the API owner.
 
 Parameter __key:__ `exclude`
 
@@ -447,7 +450,9 @@ __Example:__
 
 	http://fakeorganization.com/api.php?email=@gmail.com&exclude=5,137,1489&limit=50
 
-This example will return 50 users other than numbers `5`, `137`, and `1489` who use gmail ordered by last name. 
+This example will return 50 users other than numbers `5`, `137`, and `1489` who use gmail ordered by last name.
+
+__Note:__ If the `exclude` parameter is included in an http request to an API that has disabled this function an `error` properly will be present to notify the user.
 
 ###Count Only Parameter
 
