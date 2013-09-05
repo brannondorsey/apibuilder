@@ -86,7 +86,7 @@ Names in __bold__ denote methods that are required to use when building an API. 
 - `API::set_defualt_output_number($default_output)` sets the number of JSON result objects each API request will output if no 'limit' parameter is included in the request.
 - `API::set_max_output_number(int $max_output)` sets the max number of JSON result objects allowed per request.
 - `API::set_pretty_print($boolean)` sets the default JSON output as human readable formatted
-- `API::set_searchable($columns)` enables the [API 'search' parameter](#search-parameter) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database.
+- `API::set_searchable($columns)` enables the [API 'search' parameter](#search-parameter) and specifies which columns can be searched. Again the `$columns` parameter is a comma-delimited list of column names that correspond to the column names in your database. Only Text columns that have been FULLTEXT indexed may be included in the columns list.
 - **`API::set_default_search_order($column)`** sets the default columns for the API to order API 'search' parameter results by if the MySQL FULLTEXT Match()…Against()… statement is executed in boolean mode (required __only__ if `API::set_searchable()` has enabled columns to be searched).
 - `API::set_exclude_allowed($boolean)` enables the [API 'exclude' parameter]. This method's parameter can only be `TRUE` if your database's table includes an 'id' column (or whatever unique column name is included as this method's optional parameter).
 - `API::set_key_required($boolean)` makes your API require a unique key for each request. For more information on limiting and tracking API users visit the [Protecting your API](#protecting-your-api) section of this documentation.
@@ -95,6 +95,25 @@ Names in __bold__ denote methods that are required to use when building an API. 
 - `API::set_no_results_message($message)` sets the error message when no results are found in a request.
 
 If the API setup is configured incorrectly the `api.php`'s resulting JSON response object will contain a `config_error` array of messages describing the errors instead of a `data` property.
+
+###Other Methods
+
+Aside from the API setup methods there are a few other methods in that can be useful to know
+
+- `API::get_json_from_assoc($assoc_array)` returns the API results as JSON from an associative array of [API Builder Parameters](#api-parameter-reference). This is how you actually print the API results to the browser.
+
+And from the static `Database` class:
+
+- `Database::init_connection($host, $database, $table, $username, $password)` creates a database connection. Static method is called from inside `API::__construct()` so if you have already initialized an API object you should not need to use this static method unless the database has been closed.
+- `Database::close_connection()` closes the MySQLi database connection.
+- `Database::execute_sql($mysql_query_string)` executes the MySQL statement provided as its parameter and returns a boolean representing it's success.
+- `Database::get_all_results($mysql_query_string)` returns a 2D array of table results from the MySQL query string passed as it's parameter.
+- `Database::clean($string_or_array)` encodes the parameter using `htmlspecialchars` and `mysqli_real_escape_string` and returns the cleaned string. Useful for sanitizing input before injecting it into the database.
+- `Database::execute_from_assoc($assoc_array, $table_name)` inserts rows into (or updates existing rows if optional parameters are used) the database from an $assoc_array where all keys in the array are their value's column names in $table_name. The table name can be accessed via the `Database::$table` static public property.
+
+__Note:__ All `Database` class methods are static.
+
+For more info on or the mini library itself you can read the source code. More examples are coming soon, especially for how to update your database thought `GET` or `POST` using `Database::execute_from_assoc($string_or_array)`!
 
 ###Protecting your API
 

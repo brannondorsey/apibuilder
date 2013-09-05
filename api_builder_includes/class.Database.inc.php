@@ -37,7 +37,6 @@ class Database {
 	//execute sql query statement. Used for INSERT and UPDATE mostly. Returns false if query fails
 	public static function execute_sql($query) {
 		if(self::$mysqli->query($query)) return true;
-		else echo self::$mysqli->error;
 		return false;
 	}
 
