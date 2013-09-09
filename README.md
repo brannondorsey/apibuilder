@@ -15,7 +15,7 @@ Thats it! You can now access the data from your MySQL database using the [API Bu
 
 ###Download
 
-You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip).
+You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip). The API Builder mini lib was built and tested using PHP 5.4.4 and results when using earlier versions of PHP are unknown.
 
 ###Example
 
