@@ -57,7 +57,11 @@ class API {
 	 */
 	public function __construct($host, $db, $table, $username, $password){
 		$this->config_errors = array();
-		if(!Database::init_connection($host, $db, $table, $username, $password)) $this->config_errors[] = "database connection failed, make sure the connection info passed into API::__construct(\$host, \$db, \$table, \$username, \$password) is correct";
+		if(!Database::init_connection($host, $db, $table, $username, $password)){
+			$json_obj = new StdClass();
+			$json_obj->config_errors[] = "database connection failed, make sure the connection info passed into API::__construct(\$host, \$db, \$table, \$username, \$password) is correct";
+			die(json_encode($json_obj));
+		} ;
 	}
 
 	//-------------------------------Setup Methods-------------------------------------
