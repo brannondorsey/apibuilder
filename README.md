@@ -319,11 +319,12 @@ if(isset($jsonObj->error)){
 
 ##Submitting Data to Your Database
 
-Aside from using the API Builder to create a web accessible API, there are several methods that allow you to actually add/edit data in your database using `GET` or `POST` methods. If you are familiar with making` $.ajax` or `XmlHttpRequest`s with Javascript then inserting into and updating existing rows in your database is easy!
+Aside from using the API Builder to create a web accessible API, there are several methods that allow you to actually add/edit data in your database using `GET` or `POST` methods. 
 
-The `Database::execute_from_assoc($assoc_array, $tablename)` static method handles both of these needs. The default behavior of this method takes two parameters and is used to insert data into the database by dynamically generating a MySQL `INSERT` statement. Each time `Database::execute_from_assoc()` is called it affects __only 1 row__. The first parameter is an associative array with a required column name as each key and the value you want to insert into that column as the value. The second parameter is the name of the table to make the query. If you are executing the query on the table that you passed into `Database::init_connection()` or `API::__construct()` then you can access that table using the static `Database::$table` property. Otherwise you can specify the table name as a string.
+The `Database::execute_from_assoc($assoc_array, $tablename)` static method handles both of these needs. The default behavior of this method takes two parameters and is used to insert data into the database by dynamically generating a MySQL `INSERT` statement. Each time `Database::execute_from_assoc()` is called it affects __only 1 row__. The first parameter is an associative array with a column name as each key and the value you want to insert into that column as the value. The second parameter is the name of the table to use when making the query. If you are executing the query on the table that you passed into `Database::init_connection()` or `API::__construct()` then you can access that table using the static `Database::$table` property. Otherwise you can specify the table name as a string.
 
-Below is an example of how to insert a new user into the example that database we have been using throughout this documentation.
+Below is an example of how to insert a new user into the example database that we have been using throughout this documentation. ~~If you are familiar with making` $.ajax` or `XmlHttpRequest`s with Javascript then inserting into and updating existing rows in your database is easy!~~ (examples coming soon).
+
 
 ###Inserting
 
@@ -398,10 +399,14 @@ Then the php code on the submission page, often the same page that the html form
 
 ###Updating
 
-The `Database::execute_from_assoc()`'s third optional parameters can allow the database to update existing rows as long as the id of the row to update is passed in as key => value pair in the method's first parameter. When updating, the method's 3rd parameter should be a string representing the name of the column to update.
+The `Database::execute_from_assoc()`'s optional third parameter allows the database to update existing rows as long as an id column exists in the table and the id of the row to update is passed in as key => value pair in the method's first parameter. When updating, the method's 3rd parameter should be a string representing the name of the column to update.
 
 ```php
-// Array containing the row to change. The only required values are the id and the column being changed.
+<?php
+    // include the API Builder Database class
+    require_once('api_builder_includes/class.Database.inc.php');
+
+    // Array containing the row to change. The only required values are the id and the column being changed.
     // All other key => value pairs are ignored but are present here because often rows are updated in batch
     // after being returned in 2D array fashion from Database::get_all_results();
     $user = array("id" => 2,
@@ -420,22 +425,21 @@ The `Database::execute_from_assoc()`'s third optional parameters can allow the d
     if(Database::execute_from_assoc($user_cleaned, Database::$table, "phone_number")){
         echo $user['first_name'] . "'s phone number was changed to " . $user['phone_number'];
     }
+?>
 ```
 
 ###Other
 
-The `Database::clean($dirty)` method takes a string or array and sanitizes it using MySQLi real escape string and htmlspecialchars. I am no security expert and it is very possible that more string sanitation is needed before inserting data into your database. 
+The `Database::clean($dirty)` method takes a string or array and sanitizes it using mysql_real_escape_string and htmlspecialchars. I am no security expert and it is very possible that more string sanitation is needed before inserting data into your database. 
 
-The `Database::execute_sql($query)` method allows you to execute raw SQL statements as strings that are passed in as it's parameter. If for instance, if you wanted to change the structure of the table from the database you are connected to you could use this method. Or if you wanted to batch update a row of users you could use this method
+The `Database::execute_sql($query)` method allows you to execute raw SQL statements as strings that are passed in as it's parameter. If for instance you wanted to change the structure of the table from the database you are connected to you could use this method. Or if you wanted to batch update a row of users you could use this method as well:
 
 ```php
 $query = "UPDATE " . Database::$table . " SET state='Virgnia' WHERE state='VA'";
 if(Database::execute_sql($query)) echo "Update statement succeeded!";
 ```
 
-Be careful using this method as you can make changes to the Database that could disrupt your API setup.
-
-
+Be careful using `Database::execute_sql($query)` as you can make changes to the Database that could disrupt your API setup.
 
 ##API Parameter Reference
 
