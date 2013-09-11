@@ -7,7 +7,7 @@
 #PHP API Builder
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
-[Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [API Parameter Reference](#api-parameter-reference)
+[Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [Submitting your Data](#submitting-data-to-your-database) | [API Parameter Reference](#api-parameter-reference)
 
 
 ##Getting Started
@@ -21,7 +21,7 @@ Thats it! You can now access the data from your MySQL database using the [API Bu
 
 ###Download
 
-You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip).
+You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip). The API Builder mini lib was built and tested using PHP 5.4.4 and results when using earlier versions of PHP are unknown.
 
 ###Example
 
@@ -110,7 +110,7 @@ Aside from the API setup methods there are a few other methods in that can be us
 
 And from the static `Database` class:
 
-- `Database::init_connection($host, $database, $table, $username, $password)` creates a database connection. Static method is called from inside `API::__construct()` so if you have already initialized an API object you should not need to use this static method unless the database has been closed.
+- `Database::init_connection($host, $database, $table, $username, $password)` creates a database connection. This static method is called from inside `API::__construct()` so if you have already initialized an API object you should not need to use this static method unless the database has been closed.
 - `Database::close_connection()` closes the MySQLi database connection.
 - `Database::execute_sql($mysql_query_string)` executes the MySQL statement provided as its parameter and returns a boolean representing it's success.
 - `Database::get_all_results($mysql_query_string)` returns a 2D array of table results from the MySQL query string passed as it's parameter.
@@ -322,6 +322,125 @@ if(isset($jsonObj->error)){
 	}
 ?>
 ```
+
+##Submitting Data to Your Database
+
+Aside from using the API Builder to create a web accessible API, there are several methods that allow you to actually add/edit data in your database using `GET` or `POST` methods. If you are familiar with making` $.ajax` or `XmlHttpRequest`s with Javascript then inserting into and updating existing rows in your database is easy!
+
+The `Database::execute_from_assoc($assoc_array, $tablename)` static method handles both of these needs. The default behavior of this method takes two parameters and is used to insert data into the database by dynamically generating a MySQL `INSERT` statement. Each time `Database::execute_from_assoc()` is called it affects __only 1 row__. The first parameter is an associative array with a required column name as each key and the value you want to insert into that column as the value. The second parameter is the name of the table to make the query. If you are executing the query on the table that you passed into `Database::init_connection()` or `API::__construct()` then you can access that table using the static `Database::$table` property. Otherwise you can specify the table name as a string.
+
+Below is an example of how to insert a new user into the example that database we have been using throughout this documentation.
+
+###Inserting
+
+If the html form on the registration page looks like this:
+
+```html
+<form method="post" action="">
+    <label for="first-name">First Name</label>
+    <input type="text" id="first-name" name="first_name"/>
+
+    <label for="last-name">Last Name</label>
+    <input type="text" id="last-name" name="last_name"/>
+
+    <label for="email">E-mail</label>
+    <input type="text" id="email" name="email"/>
+
+    <label for="phone-number">Phone Number</label>
+    <input type="tel" id="phone-number" name="phone_number"/>
+
+    <label for="city">City</label>
+    <input type="text" id="city" name="city"/>
+
+    <label for="state">State</label>
+    <input type="text" id="state" name="state"/>
+
+    <label for="bio">bio</label>
+    <textarea id="bio" name="bio">
+    </textarea>
+
+    <input type="submit" value="submit">
+ </form>
+```
+
+Then the php code on the submission page, often the same page that the html form is on as in [`examples/registration_example.php`](examples/registration_example.php), would look like this:
+
+```php
+<?php
+    // include the API Builder Database class
+    require_once('api_builder_includes/class.Database.inc.php');
+    var_dump($_POST);
+    //if POST is present...
+    if(isset($_POST) &&
+       !empty($_POST)){
+
+        // Do any neccissary validation here. You can use something like https://github.com/ASoares/PHP-Form-Validation
+        // if you are not going to validate input, which you absolutely should if users are submitting it, then at least
+        // make sure the correct values are present
+        if(isset($_POST['first_name']) && !empty($_POST['first_name']) &&
+           isset($_POST['last_name']) && !empty($_POST['last_name']) &&
+           isset($_POST['email']) && !empty($_POST['email']) &&
+           isset($_POST['phone_number']) && !empty($_POST['phone_number']) &&
+           isset($_POST['city']) && !empty($_POST['city']) &&
+           isset($_POST['state']) && !empty($_POST['state']) &&
+           isset($_POST['bio']) && !empty($_POST['bio'])){
+
+            // Open the database connection. This is what happens inside of the API class constructor
+            // but if this page is simply for submitting data to the database you can just call this method
+            Database::init_connection("localhost", "organization", "users", "username", "secret_password");
+
+            // Sanitize the array so that it can be safely inserted into the database.
+            // This method uses MySQLi real escape string and htmlspecialchars encoding.
+            $post_array = Database::clean($_POST);
+
+            //submit the data to your table.
+            if(Database::execute_from_assoc($post_array, Database::$table)){
+                echo "The data was submitted to the database";
+            }else echo "There was an error submitting the data to the database";
+        }else echo "One or more of the required values is missing from the POST";
+    }else echo "Nothing was added to the database because the http request has no POST values";
+?>
+```
+
+###Updating
+
+The `Database::execute_from_assoc()`'s third optional parameters can allow the database to update existing rows as long as the id of the row to update is passed in as key => value pair in the method's first parameter. When updating, the method's 3rd parameter should be a string representing the name of the column to update.
+
+```php
+// Array containing the row to change. The only required values are the id and the column being changed.
+    // All other key => value pairs are ignored but are present here because often rows are updated in batch
+    // after being returned in 2D array fashion from Database::get_all_results();
+    $user = array("id" => 2,
+                  "first_name" => "Salvester",
+                  "last_name" => "Rinehart",
+                  "email" => "salrinehard@gmail.com",
+                  "phone_number" => "8042557684",
+                  "city" => "Richmond",
+                  "state" => "VA",
+                  "bio" => "Total badass.");
+
+    //sanitize user input
+    $user_cleaned = Database::clean($user);
+
+    //the 3rd parameter specifies this is an update statement by selecting which column from in the row to update
+    if(Database::execute_from_assoc($user_cleaned, Database::$table, "phone_number")){
+        echo $user['first_name'] . "'s phone number was changed to " . $user['phone_number'];
+    }```
+
+###Other
+
+The `Database::clean($dirty)` method takes a string or array and sanitizes it using MySQLi real escape string and htmlspecialchars. I am no security expert and it is very possible that more string sanitation is needed before inserting data into your database. 
+
+The `Database::execute_sql($query)` method allows you to execute raw SQL statements as strings that are passed in as it's parameter. If for instance, if you wanted to change the structure of the table from the database you are connected to you could use this method. Or if you wanted to batch update a row of users you could use this method
+
+```php
+$query = "UPDATE " . Database::$table . " SET state='Virgnia' WHERE state='VA'";
+if(Database::execute_sql($query)) echo "Update statement succeeded!";
+```
+
+Be careful using this method as you can make changes to the Database that could disrupt your API setup.
+
+
 
 ##API Parameter Reference
 
