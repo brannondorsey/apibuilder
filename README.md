@@ -1,9 +1,3 @@
-<head>
-	<title>API Builder for PHP</title>
-	<meta name="description" content="Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP">
-	<meta name="author" content="Brannon Dorsey">
-</head>
-
 #PHP API Builder
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
