@@ -330,7 +330,7 @@ Below is an example of how to insert a new user into the example that database w
 If the html form on the registration page looks like this:
 
 ```html
-<form method="post" action="">
+<form method="post" action="yoursubmissionpage.php">
     <label for="first-name">First Name</label>
     <input type="text" id="first-name" name="first_name"/>
 
@@ -419,7 +419,8 @@ The `Database::execute_from_assoc()`'s third optional parameters can allow the d
     //the 3rd parameter specifies this is an update statement by selecting which column from in the row to update
     if(Database::execute_from_assoc($user_cleaned, Database::$table, "phone_number")){
         echo $user['first_name'] . "'s phone number was changed to " . $user['phone_number'];
-    }```
+    }
+```
 
 ###Other
 
