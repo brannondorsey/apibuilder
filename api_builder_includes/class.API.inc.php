@@ -337,7 +337,8 @@ class API {
 			$pretty_print = true; //always output errors in pretty print for readability
 			$json_obj->config_error = $this->config_errors;
 		}
-		return ($pretty_print || $this->pretty_print) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
+		return ($pretty_print || $this->pretty_print &&
+			    version_compare(PHP_VERSION, '5.4.0') >= 0) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
 	}
 
 	//need to put call_limit_reached inside of update_API_hits or something.
