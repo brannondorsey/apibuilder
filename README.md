@@ -29,7 +29,7 @@ This example table, named `users`, holds information about imaginary users that 
 	 require_once("api_builder_includes/class.API.inc.php");
 
 	 //set page to output JSON
-	 header("Content-Type: text/javascript; charset=utf-8");
+	 header("Content-Type: application/json; charset=utf-8");
 	 
 	  //If API parameters were included in the http request via $_GET...
 	  if(isset($_GET) && !empty($_GET)){

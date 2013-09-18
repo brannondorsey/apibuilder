@@ -261,13 +261,13 @@ class API {
 	public function get_json_from_assoc(&$get_array){
 
 		$json_obj = new StdClass();
-		$pretty_print = false;
+		$pretty_print = $this->pretty_print;
 
 		if(!$this->find_config_errors()){
 
-			if(isset($get_array['pretty_print']) && 
-			   strtolower($get_array['pretty_print']) == "true"){
-				$pretty_print = true;
+			if(isset($get_array['pretty_print'])){
+				if(strtolower($get_array['pretty_print']) == "true") $pretty_print = true;
+				if(strtolower($get_array['pretty_print']) == "false") $pretty_print = false;  
 			}
 
 			//if API is public or if API is private and a correct private key was provided
@@ -337,8 +337,7 @@ class API {
 			$pretty_print = true; //always output errors in pretty print for readability
 			$json_obj->config_error = $this->config_errors;
 		}
-		return ($pretty_print || $this->pretty_print &&
-			    version_compare(PHP_VERSION, '5.4.0') >= 0) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
+		return ($pretty_print && version_compare(PHP_VERSION, '5.4.0') >= 0) ? json_encode($json_obj, JSON_PRETTY_PRINT) : json_encode($json_obj);
 	}
 
 	//need to put call_limit_reached inside of update_API_hits or something.
