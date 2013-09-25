@@ -5,7 +5,7 @@ Easily transform MySQL tables into web accessible JSON APIs with this mini libra
 
 
 ##Getting Started
-This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API pubic) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as valid JSON. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
+This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API public) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as valid JSON. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
 
 ###How it works
 
