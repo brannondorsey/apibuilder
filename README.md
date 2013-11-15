@@ -20,7 +20,7 @@ You can direct download a .zip of API Builder by clicking [here](https://github.
 ###Example
 
 Throughout this reference an example database will be used. 
-This example table, named `users`, holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
+This example table, named `users_table`, holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
 
 ```php
 <?php
@@ -34,8 +34,8 @@ This example table, named `users`, holds information about imaginary users that 
 	  //If API parameters were included in the http request via $_GET...
 	  if(isset($_GET) && !empty($_GET)){
 
-	  	//specify the columns that will be output by the api
-	  	$columns = "id, 
+	  	//specify the columns that will be output by the api as a comma-delimited list
+	  	$columns = "id,
 	  				first_name,
 	  				last_name,
 	  				email,
@@ -45,14 +45,14 @@ This example table, named `users`, holds information about imaginary users that 
 	  				bio";
 
 	  	//setup the API
-	  	//the API constructor takes parameters in this order: host, database, table, username, password
-	  	$api = new $API("localhost", "organization", "users", "username", "secret_password");
-		$api->setup($columns);
-		$api->set_default_order("last_name");
-		$api->set_searchable("first_name, last_name, email, city, state, bio");
-		$api->set_default_search_order("last_name");
-		$api->set_pretty_print(true);
-
+	  	$api = new API("localhost", "organization", "users_data", "username", "secret_password");
+	  	$api->setup($columns);
+	  	$api->set_default_order("first_name");
+	  	$api->set_searchable("first_name, last_name");
+	  	$api->set_default_search_order("first_name");
+	  	$api->set_pretty_print(true);
+		$api->set_key_required(true);
+		
 	  	//sanitize the contents of $_GET to insure that 
 	  	//malicious strings cannot disrupt your database
 	 	$get_array = Database::clean($_GET);
@@ -62,6 +62,7 @@ This example table, named `users`, holds information about imaginary users that 
 	}
 ?>
 ```
+We also added a users_data.sql file with an example table with data. You can also use this with
 
 Use the `api_template.php` to create your own api.
 
@@ -332,29 +333,31 @@ If the html form on the registration page looks like this:
 
 ```html
 <form method="post" action="yoursubmissionpage.php">
+	<fieldset><legend>Add user</legend>
     <label for="first-name">First Name</label>
-    <input type="text" id="first-name" name="first_name"/>
+    <input type="text" id="first-name" name="first_name"/><br>
 
     <label for="last-name">Last Name</label>
-    <input type="text" id="last-name" name="last_name"/>
+    <input type="text" id="last-name" name="last_name"/><br>
 
     <label for="email">E-mail</label>
-    <input type="text" id="email" name="email"/>
+    <input type="text" id="email" name="email"/><br>
 
     <label for="phone-number">Phone Number</label>
-    <input type="tel" id="phone-number" name="phone_number"/>
+    <input type="tel" id="phone-number" name="phone_number"/><br>
 
     <label for="city">City</label>
-    <input type="text" id="city" name="city"/>
+    <input type="text" id="city" name="city"/><br>
 
     <label for="state">State</label>
-    <input type="text" id="state" name="state"/>
+    <input type="text" id="state" name="state"/><br>
 
     <label for="bio">bio</label>
     <textarea id="bio" name="bio">
-    </textarea>
+    </textarea><br>
 
-    <input type="submit" value="submit">
+    <input type="submit" value="submit"><br>
+    </fieldset>
  </form>
 ```
 
@@ -409,7 +412,7 @@ The `Database::execute_from_assoc()`'s optional third parameter allows the datab
     // Array containing the row to change. The only required values are the id and the column being changed.
     // All other key => value pairs are ignored but are present here because often rows are updated in batch
     // after being returned in 2D array fashion from Database::get_all_results();
-    $user = array("id" => 2,
+    $user = array("id" => 850,
                   "first_name" => "Salvester",
                   "last_name" => "Rinehart",
                   "email" => "salrinehard@gmail.com",

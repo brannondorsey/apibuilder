@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS `users_data` (
 --
 
 INSERT INTO `users_data` (`id`, `first_name`, `last_name`, `email`, `phone_number`, `city`, `state`, `bio`) VALUES
-(1, 'Hank', 'Dollar', 'hdollar@hotmail.com', '0615077357', 'Richmond', 'VA', 'Nerd!\n'),
-(2, 'Salvester', 'Rinehart', 'salrinehard@gmail.com', '8042557684', 'Richmond', 'VA', 'Total badass.');
+(1035, 'Thomas', 'Robinson', 'thomasrobinson@gmail.com', '8042123478', 'Richmond', 'VA', 'I am a teacher in the Richmond City Public School System'),
+(850, 'George', 'Gregory', 'gregg@gmail.com', '8043703986', 'Richmond', 'VA', 'I am creative coder from Richmond');

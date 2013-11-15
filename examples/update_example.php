@@ -6,7 +6,7 @@
     // Array containing the row to change. The only required values are the id and the column being changed.
     // All other key => value pairs are ignored but are present here because often rows are updated in batch
     // after being returned in 2D array fashion from Database::get_all_results();
-    $user = array("id" => 2,
+    $user = array("id" => 850,
                   "first_name" => "Salvester",
                   "last_name" => "Rinehart",
                   "email" => "salrinehard@gmail.com",
