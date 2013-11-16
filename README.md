@@ -62,7 +62,7 @@ This example table, named `users_table`, holds information about imaginary users
 	}
 ?>
 ```
-We also added a users_data.sql file with an example table with data. You can also use this with
+We also added a `users_data.sql` file with an example table with data. You can also use this with the `update_example.php` and `registration_example.php` examples.
 
 Use the `api_template.php` to create your own api.
 
@@ -225,36 +225,42 @@ A full list of all API Builder's parameters are specified in the [Parameter Refe
 
 All data returned by your API is wrapped in a JSON object with a `data` array property. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
 
-Inside the `data` property is an array of objects that are returned as a result of the URL [API Builder Parameters](#api-parameter-reference) outlined shortly.
+Inside the `result` property is an array of objects that are returned as a result of the URL [API Builder Parameters](#api-parameter-reference) outlined shortly.
 
 ```json
 {
-    "data": [
-        {
-            "id": "1035",
-            "first_name": "Thomas",
-            "last_name": "Robinson",
-            "email": "thomasrobinson@gmail.com",
-            "phone_number": "8042123478",
-            "city": "Richmond",
-            "state": "VA",
-            "bio": "I am a teacher in the Richmond City Public School System"
-        },
-        {
-            "id": "850",
-            "first_name": "George",
-            "last_name": "Gregory",
-            "email": "gregg@gmail.com",
-            "phone_number": "8043703986",
-            "city": "Richmond",
-            "state": "VA",
-            "bio": "I am creative coder from Richmond"
-        }
-    ]
+	"result": [
+		{
+			id: "2",
+			first_name: "Salvester",
+			last_name: "Rinehart",
+			email: "salrinehard@gmail.com",
+			phone_number: "8042557684",
+			city: "Richmond",
+			state: "VA",
+			bio: "Total badass."
+		},
+		{
+		id: "1",
+			first_name: "Hank",
+			last_name: "Dollar",
+			email: "hdollar@hotmail.com",
+			phone_number: "0615077357",
+			city: "Richmond",
+			state: "VA",
+			bio: "Nerd! "
+		}
+	],
+	"info": {
+		totalresults: 2,
+		totalpages: 1,
+		resultsperpage: 25,
+		currentpage: 1
+	}
 }
 ```
 
-__Note:__ The `data` property is always an array of objects even if there is only one result.
+__Note:__ The `result` property is always an array of objects even if there is only one result. the `info` property is not returned with `count_only` parameter.
 
 ##Using the Data
 
@@ -639,6 +645,18 @@ __Example:__
 	
 __Note:__ The value of `pretty_print` is case insensitive. If large amounts of data are being transferred and human readability is unimportant it is suggested to disable pretty print so as to enable faster API requests and data parsing.
 
+###Return fields Parameter
+
+The `returnfields` Parameter returns a limited response with only the given fields. If `returnfields` is not set all fields are returned by the server. 
+
+Parameter __key:__ `returnfields`
+
+Parameter __value:__ a comma-delimited list of Column names (i.e. `id` and/or `first_name`).
+
+__Example:__
+
+	http://fakeorganization.com/api.php?returnfields=first_name,last_name
+	
 ##License and Credit
 
 The API Builder PHP Mini Library is developed and maintained by [Brannon Dorsey](http://brannondorsey.com) and is published under the [MIT License](license.txt). If you notice any bugs, have any questions, or would like to help me with development please submit an issue or pull request, write about it on the wiki, or [contact me](mailto:brannon@brannondorsey.com).
