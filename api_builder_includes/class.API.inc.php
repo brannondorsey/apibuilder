@@ -128,7 +128,7 @@ class API {
 	 * @param int $default_output
 	 * @return void
 	 */
-	public function set_defualt_output_number($default_output){
+	public function set_default_output_number($default_output){
 		$this->default_output_limit = (int) $default_output;
 	}
 
