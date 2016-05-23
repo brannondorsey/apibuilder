@@ -1,3 +1,5 @@
+**Note: API Builder is no longer maintained. This codebase should still work but will not receive updates. If you are interested in maintaining the project please let me know (5-23-2016).**
+
 #PHP API Builder
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
