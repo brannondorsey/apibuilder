@@ -28,33 +28,35 @@
             //submit the data to your table.
             if(Database::execute_from_assoc($post_array, Database::$table)){
                 echo "The data was submitted to the database";
-            }else echo "There was an error submitting the data to the database";
-        }else echo "One or more of the required values is missing from the POST";
-    }else echo "Nothing was added to the database because the http request has no POST values";
+            } else echo "There was an error submitting the data to the database";
+        } else echo "One or more of the required values is missing from the POST";
+    } else echo "Nothing was added to the database because the http request has no POST values";
 ?>
 
 <form method="post" action="">
+	<fieldset><legend>Add user</legend>
     <label for="first-name">First Name</label>
-    <input type="text" id="first-name" name="first_name"/>
+    <input type="text" id="first-name" name="first_name"/><br>
 
     <label for="last-name">Last Name</label>
-    <input type="text" id="last-name" name="last_name"/>
+    <input type="text" id="last-name" name="last_name"/><br>
 
     <label for="email">E-mail</label>
-    <input type="text" id="email" name="email"/>
+    <input type="text" id="email" name="email"/><br>
 
     <label for="phone-number">Phone Number</label>
-    <input type="tel" id="phone-number" name="phone_number"/>
+    <input type="tel" id="phone-number" name="phone_number"/><br>
 
     <label for="city">City</label>
-    <input type="text" id="city" name="city"/>
+    <input type="text" id="city" name="city"/><br>
 
     <label for="state">State</label>
-    <input type="text" id="state" name="state"/>
+    <input type="text" id="state" name="state"/><br>
 
-    <label for="bio">bio</label>
+    <label for="bio">Bio</label>
     <textarea id="bio" name="bio">
-    </textarea>
+    </textarea><br>
 
-    <input type="submit" value="submit">
+    <input type="submit" value="submit"><br>
+    </fieldset>
  </form>
