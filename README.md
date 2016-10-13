@@ -1,6 +1,7 @@
 **Note: API Builder is no longer maintained. This codebase should still work but will not receive updates. If you are interested in maintaining the project please let me know (5-23-2016).**
 
 #PHP API Builder
+[![Build Status](https://travis-ci.org/m1guelpiedrafita/apibuilder.svg?branch=master)](https://travis-ci.org/m1guelpiedrafita/apibuilder)
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [Submitting your Data](#submitting-data-to-your-database) | [API Parameter Reference](#api-parameter-reference)
