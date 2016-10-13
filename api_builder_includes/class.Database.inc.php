@@ -8,8 +8,8 @@ class Database {
 	//MySQL database info
 	public static $db;
 	public static $table;
-	protected static $host;	
-	public static $users_table = "users";
+	protected static $host;
+	public static $users_table = "users_table";
 	protected static $user;
 	protected static $password;
 
@@ -70,7 +70,9 @@ class Database {
 			echo "incorrect parameters passed to InsertUpdate::execute_from_assoc()";
 		 	return false;
 		}
-		return self::execute_sql($query);
+		$result = self::execute_sql($query);
+		if($result) $result = self::$mysqli->affected_rows; 
+		return $result;
 	}
 	
 	//returns array of one result row if one result was found or 2D array of all returned rows if multiple were found

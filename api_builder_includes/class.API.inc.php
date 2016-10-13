@@ -262,7 +262,7 @@ class API {
 
 		$json_obj = new StdClass();
 		$pretty_print = $this->pretty_print;
-
+		
 		if(!$this->find_config_errors()){
 
 			if(isset($get_array['pretty_print'])){
@@ -289,7 +289,7 @@ class API {
 						$json_obj->error = "exclude parameter not enabled for this API";
 					}else{
 						if($results_array = Database::get_all_results($query)){
-
+ 						$info_total = Database::get_all_results('SELECT FOUND_ROWS()');
 					 		if(is_array($results_array)){
 					 			// deletes key => value pairs if the value is empty. Only works if array is nested: 
 					 			// http://stackoverflow.com/questions/5750407/php-array-removing-empty-values	
@@ -303,11 +303,22 @@ class API {
 					 					}
 					 				}
 					 			}
-					 			if(!isset($count)) $json_obj->data = $results_array;
-					 			else $json_obj->count = $count; 
+					 			if(!isset($count)) {
+									$totalresults = (int)$info_total[0]['FOUND_ROWS()'];
+									if(array_key_exists('limit', $get_array)) $limit = $get_array['limit'];
+										else $limit = $this->default_output_limit;
+									$totalpages = ((int)$info_total[0]['FOUND_ROWS()']/$limit)+1;
+									if(array_key_exists('page', $get_array)) $page = $get_array['page'];
+										else $page = 1;
+					 				$json_obj->result = $results_array;
+									$json_obj->info->totalresults = (int)$totalresults;
+									$json_obj->info->totalpages =  (int)$totalpages;
+									$json_obj->info->resultsperpage = (int)$limit;
+									$json_obj->info->currentpage = (int)$page;
+								} else $json_obj->count = $count; 
 					 			//COME BACK need to make count only parameter work
 					 		}
-				 		}else $json_obj->error = "no results found";
+				 		} else $json_obj->error = "no results found";
 				 	}
 
 					//only attempt to increment the api hit count if this method is called from a PUBLIC API request
@@ -397,9 +408,11 @@ class API {
 
 		//distribute $_GETs to their appropriate arrays/vars
 		foreach($get_array as $parameter => $value){
+		
 			if($this->is_column_parameter($parameter, $this->columns_to_provide_array)){ 
 				$column_parameters[$parameter] = $value;
 			}
+			else if($parameter == 'returnfields') $returnfields = $value;
 			else if($parameter == 'search' && $this->search_allowed) $this->search = $value;
 			else if($parameter =='order_by') $order_by = $value;
 			else if($parameter == 'flow') $flow = $value;
@@ -417,9 +430,22 @@ class API {
 			else if($parameter == 'key') $this->API_key = $value; 
 		}
 
+		$columns_to_filter = $this->format_comma_delimited($returnfields);
+		$columns_to_filter_array = explode(',', $columns_to_filter);
+			
+		if(array_intersect($this->columns_to_provide_array,$columns_to_filter_array)) {
+			$columns_to_provide_new = array_intersect($this->columns_to_provide_array,preg_replace('/\s+/', '', $columns_to_filter_array));
+			$this->columns_to_provide = '';
+			foreach($columns_to_provide_new as $key => $value){
+				$i++;
+				$this->columns_to_provide .= $value;
+				if($i != count($columns_to_provide_new)) { $this->columns_to_provide .= ","; }
+			}
+		}
+
 		$match_against_statement = 'MATCH (' . $this->full_text_columns . ') AGAINST (\'' . $this->search . '\' IN BOOLEAN MODE) ';
 		if($count_only) $query = "SELECT COUNT(*)";
-		else $query = "SELECT " . $this->columns_to_provide;
+		else $query = "SELECT SQL_CALC_FOUND_ROWS " . $this->columns_to_provide;
 		if($this->search != ""){
 			//if the search is not supposed to be in boolean mode remove IN BOOLEAN MODE from $match_against_statment
 			if(!$this->search_in_boolean_mode) $match_against_statement = str_replace(" IN BOOLEAN MODE", "", $match_against_statement);
