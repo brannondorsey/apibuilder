@@ -5,3 +5,4 @@ php:
   - '7.0'
   - '7.1'
 script: php -l api_template.php
+script: php -l api_builder_includes/class.API.inc.php
