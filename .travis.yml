@@ -4,6 +4,7 @@ php:
   - '5.6'
   - '7.0'
   - '7.1'
-script: php -l api_template.php
-script: php -l api_builder_includes/class.API.inc.php
-script: php -l api_builder_includes/class.Database.inc.php
+script: php -l *.php
+script: php -l api_builder_includes/*.php
+script: php -l examples/*.php
+script: php -l */*.php
