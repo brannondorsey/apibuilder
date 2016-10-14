@@ -7,4 +7,3 @@ php:
 script: php -l *.php
 script: php -l api_builder_includes/*.php
 script: php -l examples/*.php
-script: php -l */*.php
