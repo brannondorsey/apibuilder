@@ -4,4 +4,4 @@ php:
   - '5.6'
   - '7.0'
   - '7.1'
-script: phpunit api_template.php
+script: php -l api_template.php
