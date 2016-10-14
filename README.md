@@ -1,6 +1,8 @@
 **Note: API Builder is no longer maintained. This codebase should still work but will not receive updates. If you are interested in maintaining the project please let me know (5-23-2016).**
 
 #PHP API Builder
+[![Build Status](https://travis-ci.org/m1guelpiedrafita/apibuilder.svg?branch=master)](https://travis-ci.org/m1guelpiedrafita/apibuilder)
+
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [Submitting your Data](#submitting-data-to-your-database) | [API Parameter Reference](#api-parameter-reference)
@@ -22,7 +24,7 @@ You can direct download a .zip of API Builder by clicking [here](https://github.
 ###Example
 
 Throughout this reference an example database will be used. 
-This example table, named `users`, holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
+This example table, named `users_table`, holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
 
 ```php
 <?php
@@ -36,8 +38,8 @@ This example table, named `users`, holds information about imaginary users that 
 	  //If API parameters were included in the http request via $_GET...
 	  if(isset($_GET) && !empty($_GET)){
 
-	  	//specify the columns that will be output by the api
-	  	$columns = "id, 
+	  	//specify the columns that will be output by the api as a comma-delimited list
+	  	$columns = "id,
 	  				first_name,
 	  				last_name,
 	  				email,
@@ -47,14 +49,14 @@ This example table, named `users`, holds information about imaginary users that 
 	  				bio";
 
 	  	//setup the API
-	  	//the API constructor takes parameters in this order: host, database, table, username, password
-	  	$api = new $API("localhost", "organization", "users", "username", "secret_password");
-		$api->setup($columns);
-		$api->set_default_order("last_name");
-		$api->set_searchable("first_name, last_name, email, city, state, bio");
-		$api->set_default_search_order("last_name");
-		$api->set_pretty_print(true);
-
+	  	$api = new API("localhost", "organization", "users_data", "username", "secret_password");
+	  	$api->setup($columns);
+	  	$api->set_default_order("first_name");
+	  	$api->set_searchable("first_name, last_name");
+	  	$api->set_default_search_order("first_name");
+	  	$api->set_pretty_print(true);
+		$api->set_key_required(true);
+		
 	  	//sanitize the contents of $_GET to insure that 
 	  	//malicious strings cannot disrupt your database
 	 	$get_array = Database::clean($_GET);
@@ -64,6 +66,7 @@ This example table, named `users`, holds information about imaginary users that 
 	}
 ?>
 ```
+We also added a `users_data.sql` file with an example table with data. You can also use this with the `update_example.php` and `registration_example.php` examples.
 
 Use the `api_template.php` to create your own api.
 
@@ -226,36 +229,42 @@ A full list of all API Builder's parameters are specified in the [Parameter Refe
 
 All data returned by your API is wrapped in a JSON object with a `data` array property. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
 
-Inside the `data` property is an array of objects that are returned as a result of the URL [API Builder Parameters](#api-parameter-reference) outlined shortly.
+Inside the `result` property is an array of objects that are returned as a result of the URL [API Builder Parameters](#api-parameter-reference) outlined shortly.
 
 ```json
 {
-    "data": [
-        {
-            "id": "1035",
-            "first_name": "Thomas",
-            "last_name": "Robinson",
-            "email": "thomasrobinson@gmail.com",
-            "phone_number": "8042123478",
-            "city": "Richmond",
-            "state": "VA",
-            "bio": "I am a teacher in the Richmond City Public School System"
-        },
-        {
-            "id": "850",
-            "first_name": "George",
-            "last_name": "Gregory",
-            "email": "gregg@gmail.com",
-            "phone_number": "8043703986",
-            "city": "Richmond",
-            "state": "VA",
-            "bio": "I am creative coder from Richmond"
-        }
-    ]
+	"result": [
+		{
+			id: "2",
+			first_name: "Salvester",
+			last_name: "Rinehart",
+			email: "salrinehard@gmail.com",
+			phone_number: "8042557684",
+			city: "Richmond",
+			state: "VA",
+			bio: "Total badass."
+		},
+		{
+		id: "1",
+			first_name: "Hank",
+			last_name: "Dollar",
+			email: "hdollar@hotmail.com",
+			phone_number: "0615077357",
+			city: "Richmond",
+			state: "VA",
+			bio: "Nerd! "
+		}
+	],
+	"info": {
+		totalresults: 2,
+		totalpages: 1,
+		resultsperpage: 25,
+		currentpage: 1
+	}
 }
 ```
 
-__Note:__ The `data` property is always an array of objects even if there is only one result.
+__Note:__ The `result` property is always an array of objects even if there is only one result. the `info` property is not returned with `count_only` parameter.
 
 ##Using the Data
 
@@ -334,29 +343,31 @@ If the html form on the registration page looks like this:
 
 ```html
 <form method="post" action="yoursubmissionpage.php">
+	<fieldset><legend>Add user</legend>
     <label for="first-name">First Name</label>
-    <input type="text" id="first-name" name="first_name"/>
+    <input type="text" id="first-name" name="first_name"/><br>
 
     <label for="last-name">Last Name</label>
-    <input type="text" id="last-name" name="last_name"/>
+    <input type="text" id="last-name" name="last_name"/><br>
 
     <label for="email">E-mail</label>
-    <input type="text" id="email" name="email"/>
+    <input type="text" id="email" name="email"/><br>
 
     <label for="phone-number">Phone Number</label>
-    <input type="tel" id="phone-number" name="phone_number"/>
+    <input type="tel" id="phone-number" name="phone_number"/><br>
 
     <label for="city">City</label>
-    <input type="text" id="city" name="city"/>
+    <input type="text" id="city" name="city"/><br>
 
     <label for="state">State</label>
-    <input type="text" id="state" name="state"/>
+    <input type="text" id="state" name="state"/><br>
 
     <label for="bio">bio</label>
     <textarea id="bio" name="bio">
-    </textarea>
+    </textarea><br>
 
-    <input type="submit" value="submit">
+    <input type="submit" value="submit"><br>
+    </fieldset>
  </form>
 ```
 
@@ -411,7 +422,7 @@ The `Database::execute_from_assoc()`'s optional third parameter allows the datab
     // Array containing the row to change. The only required values are the id and the column being changed.
     // All other key => value pairs are ignored but are present here because often rows are updated in batch
     // after being returned in 2D array fashion from Database::get_all_results();
-    $user = array("id" => 2,
+    $user = array("id" => 850,
                   "first_name" => "Salvester",
                   "last_name" => "Rinehart",
                   "email" => "salrinehard@gmail.com",
@@ -638,6 +649,18 @@ __Example:__
 	
 __Note:__ The value of `pretty_print` is case insensitive. If large amounts of data are being transferred and human readability is unimportant it is suggested to disable pretty print so as to enable faster API requests and data parsing.
 
+###Return fields Parameter
+
+The `returnfields` Parameter returns a limited response with only the given fields. If `returnfields` is not set all fields are returned by the server. 
+
+Parameter __key:__ `returnfields`
+
+Parameter __value:__ a comma-delimited list of Column names (i.e. `id` and/or `first_name`).
+
+__Example:__
+
+	http://fakeorganization.com/api.php?returnfields=first_name,last_name
+	
 ##License and Credit
 
 The API Builder PHP Mini Library is developed and maintained by [Brannon Dorsey](http://brannondorsey.com) and is published under the [MIT License](license.txt). If you notice any bugs, have any questions, or would like to help me with development please submit an issue or pull request, write about it on the wiki, or [contact me](mailto:brannon@brannondorsey.com).
