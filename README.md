@@ -1,25 +1,25 @@
 **Note: API Builder is no longer maintained. This codebase should still work but will not receive updates. If you are interested in maintaining the project please let me know (5-23-2016).**
 
-#PHP API Builder
+# PHP API Builder
 Easily transform MySQL tables into web accessible JSON APIs with this mini library for PHP.
 
 [Getting Started](#getting-started) | [Customizing your API](#customizing-your-api) | [Making Requests](#making-requests) | [Using the Data](#using-the-data) | [Submitting your Data](#submitting-data-to-your-database) | [API Parameter Reference](#api-parameter-reference)
 
 
-##Getting Started
+## Getting Started
 This PHP API Builder is used to build simple http JSON APIs from MySQL databases. With it you (or anyone if you choose to make the API public) can access data on the web through an easy-to-setup `api.php` page. Using the API Parameters provided in this mini library users can query a database through that `api.php` page using `GET` parameters included in the request's URL and return the results as valid JSON. A full list of available API parameters is located in the [API Parameter Reference](#api-parameter-reference) section of this documentation. 
 
-###How it works
+### How it works
 
 Setting up the API is easy! To add an API to an existing MySQL table simply place this repository's `api_builder_include/` folder and `api_template.php` file in the directory where you want your api page to be located (If you want your api accessible at yourdomain.com/api.php you should put these files in your root directory). Next update the `api_template.php` file to reflect your database info and your desired [API customization](#customizing-your-api). Then save the updated file as `api.php` or whatever you want your API page to be called.
 
 Thats it! You can now access the data from your MySQL database using the [API Builder URL Parameters](#api-parameter-reference). Below is an basic example of how the `$api` object can be setup.
 
-###Download
+### Download
 
 You can direct download a .zip of API Builder by clicking [here](https://github.com/brannondorsey/apibuilder/archive/master.zip). The API Builder mini lib was built and tested using PHP 5.4.4 and results when using earlier versions of PHP are unknown.
 
-###Example
+### Example
 
 Throughout this reference an example database will be used. 
 This example table, named `users`, holds information about imaginary users that belong to an organization. The `api.php` for this example is as follows:
@@ -67,7 +67,7 @@ This example table, named `users`, holds information about imaginary users that 
 
 Use the `api_template.php` to create your own api.
 
-##Customizing your API
+## Customizing your API
 
 The API Builder mini lib features many more complex API setups than the one demonstrated in the `api_template.php` file. Some of these features include:
 
@@ -77,7 +77,7 @@ The API Builder mini lib features many more complex API setups than the one demo
 
 All `API` class setup methods (excluding the constructor) begin with the word `set`. A full list of these setup methods and a brief description can be viewed below. For more information about each method view the [`class.API.inc.php`](api_builder_includes/class.API.inc.php) source.
 
-###API Class Setup Methods
+### API Class Setup Methods
 
 Names in __bold__ denote methods that are required to use when building an API. All other methods are optional.
 
@@ -98,7 +98,7 @@ Names in __bold__ denote methods that are required to use when building an API. 
 
 If the API setup is configured incorrectly the `api.php`'s resulting JSON response object will contain a `config_error` array of messages describing the errors instead of a `data` property.
 
-###Other Methods
+### Other Methods
 
 Aside from the API setup methods there are a few other methods in that can be useful to know
 
@@ -117,11 +117,11 @@ __Note:__ All `Database` class methods are static.
 
 For more info on or the mini library itself you can read the source code. More examples are coming soon, especially for how to update your database thought `GET` or `POST` using `Database::execute_from_assoc($string_or_array)`!
 
-###Protecting your API
+### Protecting your API
 
 There are two ways of limiting access to your API using the setup methods. The first, and most private, is by setting up your API so that only you (and people who you give your private key to) can access it. The second is to track and limit API usage using API keys that are distributed to your users.
 
-####Making your API Private
+#### Making your API Private
 
 To make your API private include the following when setting up your `api.php` page where `$private_key` is a unique 40 character SHA1: 
 
@@ -136,17 +136,17 @@ Then when you make an http request to your API just prepend your private key to 
 
 Viola… your own private API.
 
-####Limiting and Tracking Usage with API Keys
+#### Limiting and Tracking Usage with API Keys
 
 Often API owners supply users with unique API keys to track and limit requests so as not to bog down servers. This is a common practice with the Google, Twitter, and Facebook APIs. The API Builder allows API owners to easily do the same!
 
-#####Database Setup
+##### Database Setup
 
 Because this process requires each user to have their own unique API key to access the API, a new table needs to be made to store information about the users that will be making the requests. This table should be named "users" and should include __at least__ the following columns: "id", "API_key", "API_hits", and "API_hit_date". These table and column names must be exact unless specified otherwise using `API::set_key_required()`'s optional parameters (see [API setup](#api-setup) below). This SQL table structure can be imported into your existing database from the [`users_table.sql`](users_table.sql) file.
 
 Alternatively, it is often the case that APIs actually describe data regarding users in the first place. For instance, the Twitter and Facebook APIs deliver data about users! If your API is delivering data from a users table already, and you would like to grant __only__ those users access to your API, you may simply add the "id", "API_key", "API_hits", and "API_hit_date" columns to your existing users table instead of creating a new one.
 
-#####API Setup
+##### API Setup
 
 Once the new table has been created in your database (or your original table that was saving users  was amended to include the required columns) you are ready to setup you API to track and limit user's hits. If you used the default table name "users" and the column names "id", "API_key", "API_hits", and "API_hit_date" then the API setup is easy:
 
@@ -176,7 +176,7 @@ For simplicity it is recommended to download and import the "users" table struct
 
 All that is required now is for you to fill the "users" table's "API_key"s with 40 character SHA1 and distribute them to your real-life users so that they can use your API.
 
-#####Usage and Errors
+##### Usage and Errors
 
 Once your API has been set to require a key (`API::set_key_required()`) only users who make http requests that contain a valid [API Key Parameter](#api-key-parameter) will be given API results. 
 
@@ -200,20 +200,20 @@ In the event that a user has maxed out their API hits for the day (set using `AP
 }
 ```
 
-##Making Requests
+## Making Requests
 
 Using your API is easy once you learn how it works. 
 
-###Formatting a request
+### Formatting a request
 
 The API Builder queries [MySQL Databases](https://en.wikipedia.org/wiki/MySQL) and so the http requests used to return data is very similar to forming a MySQL `SELECT` query statement. If you have used MySQL before, think of using the API URL parameters as little pieces of a query. For instance, the `limit`, `order_by`, and `flow` (my nickname for MySQL `ORDER BY`'s `DESC` or `ASC`) parameters translate directly into a MySQL statement on your server.
 
-###Example Request
+### Example Request
      http://fakeorganization.com/api.php?search=Thompson&order_by=id&limit=50
      
 The above request would return the 50 newest users who have Thompson included somewhere in their first_name, last_name, email, city, state or bio columns.
 
-###Notable Parameters
+### Notable Parameters
 
 - `search` uses a MySQL FULLTEXT search to find the most relevant results in the database to the parameter's value.
 - `order_by` returns results ordered by the column name given as the parameter's value.
@@ -222,7 +222,7 @@ The above request would return the 50 newest users who have Thompson included so
 
 A full list of all API Builder's parameters are specified in the [Parameter Reference](#api-parameter-reference) section of this documentation.
 
-###Returned JSON
+### Returned JSON
 
 All data returned by your API is wrapped in a JSON object with a `data` array property. If there is an error, or no results are found, an `error` variable with a corresponding error message will be returned __instead__ of a `data` property. If your API is setup incorrectly in you `api.php` page a `config_error` array is returned. 
 
@@ -257,7 +257,7 @@ Inside the `data` property is an array of objects that are returned as a result 
 
 __Note:__ The `data` property is always an array of objects even if there is only one result.
 
-##Using the Data
+## Using the Data
 
 Because the API outputs data using JSON the results of an API http request can be loaded into a project written in almost any language. I have chosen to provide brief code examples using `PHP`, however, these code snippets outline the basics of loading and using your API data and easily apply to another language. 
 
@@ -283,7 +283,7 @@ foreach($jsonObj->data as $user){
 ?>
 ```
 
-###Error Handling
+### Error Handling
 
 Often requests to the API return no results because no results were found that met the request's criteria. For this reason it is important to know how to handle the API `error`. The JSON that is returned in this instance is `{"error": "no results found"}` or whatever you specify using the `API::set_no_results_message()`.
 
@@ -319,7 +319,7 @@ if(isset($jsonObj->error)){
 ?>
 ```
 
-##Submitting Data to Your Database
+## Submitting Data to Your Database
 
 Aside from using the API Builder to create a web accessible API, there are several methods that allow you to actually add/edit data in your database using `GET` or `POST` methods. 
 
@@ -328,7 +328,7 @@ The `Database::execute_from_assoc($assoc_array, $tablename)` static method handl
 Below is an example of how to insert a new user into the example database that we have been using throughout this documentation. ~~If you are familiar with making` $.ajax` or `XmlHttpRequest`s with Javascript then inserting into and updating existing rows in your database is easy!~~ (examples coming soon).
 
 
-###Inserting
+### Inserting
 
 If the html form on the registration page looks like this:
 
@@ -399,7 +399,7 @@ Then the php code on the submission page, often the same page that the html form
 ?>
 ```
 
-###Updating
+### Updating
 
 The `Database::execute_from_assoc()`'s optional third parameter allows the database to update existing rows as long as an id column exists in the table and the id of the row to update is passed in as key => value pair in the method's first parameter. When updating, the method's 3rd parameter should be a string representing the name of the column to update.
 
@@ -430,7 +430,7 @@ The `Database::execute_from_assoc()`'s optional third parameter allows the datab
 ?>
 ```
 
-###Other
+### Other
 
 The `Database::clean($dirty)` method takes a string or array and sanitizes it using mysql_real_escape_string and htmlspecialchars. I am no security expert and it is very possible that more string sanitation is needed before inserting data into your database. 
 
@@ -443,13 +443,13 @@ if(Database::execute_sql($query)) echo "Update statement succeeded!";
 
 Be careful using `Database::execute_sql($query)` as you can make changes to the Database that could disrupt your API setup.
 
-##API Parameter Reference
+## API Parameter Reference
 
 This section documents in detail all of the API Builder URL parameters currently available to use when making an http request to your API.
 
 It uses a made up table with a setup that is specified [earlier in this documentation](#example).
 
-###API Key Parameter
+### API Key Parameter
 
 If the API has been setup to require a unique key it will need to be included with each request. If the API was [set up in this fashion](#limiting-and-tracking-usage-with-api-keys) you will not be able to access the API's data unless you have been provided with a valid key. API Builder APIs have this function disabled by default but can be ]enabled by the API owner with the `API::set_key_required()` method.
 
@@ -463,7 +463,7 @@ __Example__:
      
 __Note:__ Failing to include a valid API key when it is required or making more than the allowed requests in a day will throw an `error` object in place of a `data` object.
 
-###Private Key Parameter
+### Private Key Parameter
 
 Similar to the API Key Parameter the Private Key Parameter limits access to the API. Unlike the API Key however there is only one Private Key allowed per API. This parameter is used if the API is intended to be private (i.e. for only one user, not just limited access as with the API Key Parameter). This function is disabled by default but can be enabled by the API owner with `API::set_private()`.
 
@@ -476,7 +476,7 @@ __Example__:
     http://fakeorganization.com/api.php?last_name=Renolds&private_key=ac3c1017b45b299dbf99ce8470c56b063e24f935
 
 
-###Column Parameters
+### Column Parameters
 Column parameters allow you to query data for a specific column value where the parameter key is specified to be the column name in your database. Column parameters can be stacked for more specific queries.
 
 Parameter __keys:__ Column name (i.e. `first_name`) to perform query on.
@@ -492,7 +492,7 @@ This example request would return up to 10 users who's last name are Thompson or
 
 __Notes:__ The column parameter's are overridden if a `search` parameter is included in the request. 
 
-###Search Parameter
+### Search Parameter
 The `search` parameter uses a  MySQL `FULLTEXT` [Match()… Against()…](http://dev.mysql.com/doc/refman/5.5/en/fulltext-search.html#function_match) search to find the most relevant results to the searched string. 
 
 Parameter __key:__ `search`
@@ -507,7 +507,7 @@ __Notes:__ `search` results are automatically ordered by relevancy, or if releva
 
 Default Match()…Against()… MySQL statements search databases using a 50% similarity threshold. This means that if a searched string appears in more than half of the rows in the database the search will ignore it. Because it is possible that webpages will have similar tags, I have built the API to automatically re-search `IN BOOLEAN MODE` if no results are found in the first try. If results are found in the second search they are ordered by a default column set by the API owner.
 
-###Order By Parameter
+### Order By Parameter
 
 This parameter is used with the column parameters to sort the returned users by the specified value. If `order_by` is not specified its value defaults to the value set by the API's `API::set_default_order()` in the `api.php` page. `order_by` will be ignored when the `search` parameter is specified.
 
@@ -521,7 +521,7 @@ __Example:__
 
 This request returns the 15 most recent users from Virginia.
 
-###Flow Parameter
+### Flow Parameter
 
 This parameter specifies the MySQL `ASC` and `DESC` options that follow the `ORDER BY` statement. If `flow` is not specified it defaults to `DESC`.
 
@@ -536,7 +536,7 @@ __Example:__
 This request returns the 15 __least recent__ users from Virginia.		
 __Notes:__ `flow`'s values are case insensitive.
 
-###Limit Parameter
+### Limit Parameter
 
 The `limit` parameter works similarly to MySQL `LIMIT`. It specifies the max number of users to be returned. The default value, if unspecified is `25`. The default max value of results that can be returned in one request is `250`. 
 
@@ -550,7 +550,7 @@ __Example:__
 
 Returns the 5 most recent users from Illinois.
 
-###Page Parameter
+### Page Parameter
 
 The page parameter is used for results pagination. It keeps track of what set (or page) of results are returned. This is similar to the [MySQL OFFSET statement](http://dev.mysql.com/doc/refman/5.0/en/select.html). If not specified the page value will default to `1`.
 
@@ -567,7 +567,7 @@ For instance, in the unlikely example that all users have the string "programmin
 
 __Note:__ The MySQL `OFFSET` is calculated server side by multiplying the value of `limit` by the value of `page` minus one. 
 
-###Exact Parameter
+### Exact Parameter
 
 The exact parameter is used in conjunction with the column parameters and specifies whether or not their values are queried with relative or exact accuracy. If not included in the URL request the `exact` parameter defaults to `false`.
 
@@ -583,7 +583,7 @@ This request will limit the returned results to the user whose id is __exactly__
 	
 __Notes:__ `exact`'s values are case insensitive.
 
-###Exclude Parameter
+### Exclude Parameter
 
 The exclude parameter is used in conjunction with the column parameters to exclude one or more specific result row from a query. It is disabled by default but may be enabled by the API owner.
 
@@ -599,7 +599,7 @@ This example will return 50 users other than numbers `5`, `137`, and `1489` who 
 
 __Note:__ If the `exclude` parameter is included in an http request to an API that has disabled this function an `error` properly will be present to notify the user.
 
-###Count Only Parameter
+### Count Only Parameter
 
 The `count only` parameter differs from all of the other API Builder parameters as it __does not__ return an array of result objects. Instead, it returns a single object as the first element in the `data` array. This object has only one property, `count`, where the corresponding `string` value describes the number of results returned by the rest of the url parameters. If the `count_only` parameter is not specified the default value is `FALSE`. When `count_only` is set to `TRUE` the request will __only__ evaluate and return the number of results found by the rest of the url parameters and the request __will not__ return any row data.
 
@@ -624,7 +624,7 @@ This request returns the number of users that have the first name "Thomas". The 
 
 __Note:__ The value of `count_only` is case insensitive.
 
-###Pretty Print Parameter
+### Pretty Print Parameter
 
 The `pretty_print` Parameter returns a response with indentations and line breaks. If `pretty_print` is set to `TRUE` the results returned by the server will be human readable (pretty printed). With most API setups Pretty Print will be enabled by default but the API owner may have this feature disabled. Either way Pretty Print can be turned on or off with this parameter. 
 
@@ -638,6 +638,6 @@ __Example:__
 	
 __Note:__ The value of `pretty_print` is case insensitive. If large amounts of data are being transferred and human readability is unimportant it is suggested to disable pretty print so as to enable faster API requests and data parsing.
 
-##License and Credit
+## License and Credit
 
 The API Builder PHP Mini Library is developed and maintained by [Brannon Dorsey](http://brannondorsey.com) and is published under the [MIT License](license.txt). If you notice any bugs, have any questions, or would like to help me with development please submit an issue or pull request, write about it on the wiki, or [contact me](mailto:brannon@brannondorsey.com).

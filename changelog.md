@@ -1,6 +1,6 @@
-#Changelog
+# Changelog
 
-##v1.1
+## v1.1
 
 - Fixed `pretty_print` URL parameter bug that disabled users from turning pretty print off if `api.php` page had it set to default on using `API::set_pretty_print()`.
 - `pretty_print` only works on version 5.4.0 and up. Prior versions of PHP do not allow use of the JSON_PRETTY_PRINT constant and was causing an error. 
